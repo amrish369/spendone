@@ -14,6 +14,9 @@ import { Route as AddRouteImport } from './routes/add'
 import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CategoryRouteImport } from './routes/category'
+import { Route as ExportRouteImport } from './routes/export'
+import { Route as FundingRouteImport } from './routes/funding'
+import { Route as KhatabookRouteImport } from './routes/khatabook'
 import { Route as LenDenRouteImport } from './routes/len-den'
 import { Route as MonthRouteImport } from './routes/month'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -43,6 +46,21 @@ const CategoryRoute = CategoryRouteImport.update({
   path: '/category',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExportRoute = ExportRouteImport.update({
+  id: '/export',
+  path: '/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FundingRoute = FundingRouteImport.update({
+  id: '/funding',
+  path: '/funding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KhatabookRoute = KhatabookRouteImport.update({
+  id: '/khatabook',
+  path: '/khatabook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LenDenRoute = LenDenRouteImport.update({
   id: '/len-den',
   path: '/len-den',
@@ -65,6 +83,9 @@ export interface FileRoutesByFullPath {
   '/attendance': typeof AttendanceRoute
   '/auth': typeof AuthRoute
   '/category': typeof CategoryRoute
+  '/export': typeof ExportRoute
+  '/funding': typeof FundingRoute
+  '/khatabook': typeof KhatabookRoute
   '/len-den': typeof LenDenRoute
   '/month': typeof MonthRoute
   '/settings': typeof SettingsRoute
@@ -75,6 +96,9 @@ export interface FileRoutesByTo {
   '/attendance': typeof AttendanceRoute
   '/auth': typeof AuthRoute
   '/category': typeof CategoryRoute
+  '/export': typeof ExportRoute
+  '/funding': typeof FundingRoute
+  '/khatabook': typeof KhatabookRoute
   '/len-den': typeof LenDenRoute
   '/month': typeof MonthRoute
   '/settings': typeof SettingsRoute
@@ -86,6 +110,9 @@ export interface FileRoutesById {
   '/attendance': typeof AttendanceRoute
   '/auth': typeof AuthRoute
   '/category': typeof CategoryRoute
+  '/export': typeof ExportRoute
+  '/funding': typeof FundingRoute
+  '/khatabook': typeof KhatabookRoute
   '/len-den': typeof LenDenRoute
   '/month': typeof MonthRoute
   '/settings': typeof SettingsRoute
@@ -98,6 +125,9 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/auth'
     | '/category'
+    | '/export'
+    | '/funding'
+    | '/khatabook'
     | '/len-den'
     | '/month'
     | '/settings'
@@ -108,6 +138,9 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/auth'
     | '/category'
+    | '/export'
+    | '/funding'
+    | '/khatabook'
     | '/len-den'
     | '/month'
     | '/settings'
@@ -118,6 +151,9 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/auth'
     | '/category'
+    | '/export'
+    | '/funding'
+    | '/khatabook'
     | '/len-den'
     | '/month'
     | '/settings'
@@ -129,6 +165,9 @@ export interface RootRouteChildren {
   AttendanceRoute: typeof AttendanceRoute
   AuthRoute: typeof AuthRoute
   CategoryRoute: typeof CategoryRoute
+  ExportRoute: typeof ExportRoute
+  FundingRoute: typeof FundingRoute
+  KhatabookRoute: typeof KhatabookRoute
   LenDenRoute: typeof LenDenRoute
   MonthRoute: typeof MonthRoute
   SettingsRoute: typeof SettingsRoute
@@ -171,6 +210,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategoryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/export': {
+      id: '/export'
+      path: '/export'
+      fullPath: '/export'
+      preLoaderRoute: typeof ExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/funding': {
+      id: '/funding'
+      path: '/funding'
+      fullPath: '/funding'
+      preLoaderRoute: typeof FundingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/khatabook': {
+      id: '/khatabook'
+      path: '/khatabook'
+      fullPath: '/khatabook'
+      preLoaderRoute: typeof KhatabookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/len-den': {
       id: '/len-den'
       path: '/len-den'
@@ -201,6 +261,9 @@ const rootRouteChildren: RootRouteChildren = {
   AttendanceRoute: AttendanceRoute,
   AuthRoute: AuthRoute,
   CategoryRoute: CategoryRoute,
+  ExportRoute: ExportRoute,
+  FundingRoute: FundingRoute,
+  KhatabookRoute: KhatabookRoute,
   LenDenRoute: LenDenRoute,
   MonthRoute: MonthRoute,
   SettingsRoute: SettingsRoute,
