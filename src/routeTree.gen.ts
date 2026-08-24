@@ -11,10 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AddRouteImport } from './routes/add'
+import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CategoryRouteImport } from './routes/category'
 import { Route as LenDenRouteImport } from './routes/len-den'
 import { Route as MonthRouteImport } from './routes/month'
+import { Route as SettingsRouteImport } from './routes/settings'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -24,6 +26,11 @@ const IndexRoute = IndexRouteImport.update({
 const AddRoute = AddRouteImport.update({
   id: '/add',
   path: '/add',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AttendanceRoute = AttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -46,47 +53,85 @@ const MonthRoute = MonthRouteImport.update({
   path: '/month',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/add': typeof AddRoute
+  '/attendance': typeof AttendanceRoute
   '/auth': typeof AuthRoute
   '/category': typeof CategoryRoute
   '/len-den': typeof LenDenRoute
   '/month': typeof MonthRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/add': typeof AddRoute
+  '/attendance': typeof AttendanceRoute
   '/auth': typeof AuthRoute
   '/category': typeof CategoryRoute
   '/len-den': typeof LenDenRoute
   '/month': typeof MonthRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/add': typeof AddRoute
+  '/attendance': typeof AttendanceRoute
   '/auth': typeof AuthRoute
   '/category': typeof CategoryRoute
   '/len-den': typeof LenDenRoute
   '/month': typeof MonthRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/add' | '/auth' | '/category' | '/len-den' | '/month'
+  fullPaths:
+    | '/'
+    | '/add'
+    | '/attendance'
+    | '/auth'
+    | '/category'
+    | '/len-den'
+    | '/month'
+    | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/add' | '/auth' | '/category' | '/len-den' | '/month'
-  id: '__root__' | '/' | '/add' | '/auth' | '/category' | '/len-den' | '/month'
+  to:
+    | '/'
+    | '/add'
+    | '/attendance'
+    | '/auth'
+    | '/category'
+    | '/len-den'
+    | '/month'
+    | '/settings'
+  id:
+    | '__root__'
+    | '/'
+    | '/add'
+    | '/attendance'
+    | '/auth'
+    | '/category'
+    | '/len-den'
+    | '/month'
+    | '/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AddRoute: typeof AddRoute
+  AttendanceRoute: typeof AttendanceRoute
   AuthRoute: typeof AuthRoute
   CategoryRoute: typeof CategoryRoute
   LenDenRoute: typeof LenDenRoute
   MonthRoute: typeof MonthRoute
+  SettingsRoute: typeof SettingsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -103,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/add'
       fullPath: '/add'
       preLoaderRoute: typeof AddRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/attendance': {
+      id: '/attendance'
+      path: '/attendance'
+      fullPath: '/attendance'
+      preLoaderRoute: typeof AttendanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -133,16 +185,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MonthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AddRoute: AddRoute,
+  AttendanceRoute: AttendanceRoute,
   AuthRoute: AuthRoute,
   CategoryRoute: CategoryRoute,
   LenDenRoute: LenDenRoute,
   MonthRoute: MonthRoute,
+  SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

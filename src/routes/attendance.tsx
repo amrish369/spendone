@@ -61,7 +61,7 @@ function AttendancePage() {
         .from("attendance")
         .upsert(
           {
-            id: existing?.id,
+            ...(existing ? { id: existing.id } : {}),
             user_id,
             staff_id: member.id,
             date,
