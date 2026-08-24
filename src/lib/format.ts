@@ -23,18 +23,18 @@ export const monthKey = (iso: string) => (iso || "").slice(0, 7);
 export const monthLabel = (key: string) => {
   const [y, m] = key.split("-");
   const names = [
-    "जनवरी",
-    "फ़रवरी",
-    "मार्च",
-    "अप्रैल",
-    "मई",
-    "जून",
-    "जुलाई",
-    "अगस्त",
-    "सितंबर",
-    "अक्टूबर",
-    "नवंबर",
-    "दिसंबर",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
   return `${names[Number(m) - 1] ?? m} ${y}`;
 };
