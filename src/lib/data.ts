@@ -39,7 +39,7 @@ export type LedgerEntry = {
   note: string | null;
 };
 
-async function unwrap<T>(p: PromiseLike<{ data: T | null; error: { message: string } | null }>) {
+async function unwrap<T>(p: PromiseLike<{ data: unknown; error: { message: string } | null }>) {
   const { data, error } = await p;
   if (error) throw new Error(error.message);
   return (data ?? []) as T;
