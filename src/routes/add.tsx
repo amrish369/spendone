@@ -21,9 +21,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/add")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    edit: typeof search.edit === "string" ? search.edit : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { edit?: string } =>
+    typeof search["edit"] === "string" ? { edit: search["edit"] } : {},
   head: () => ({
     meta: [
       { title: "लेन-देन जोड़ें – खर्च ट्रैकर" },
@@ -225,7 +224,10 @@ function CategoryManager() {
     const { error } = await supabase
       .from("categories")
       .insert({ name: name.trim(), type, user_id });
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     setName("");
     qc.invalidateQueries({ queryKey: ["categories"] });
     toast.success("श्रेणी जुड़ गई!");
@@ -233,7 +235,10 @@ function CategoryManager() {
 
   const remove = async (id: string) => {
     const { error } = await supabase.from("categories").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     qc.invalidateQueries({ queryKey: ["categories"] });
   };
 

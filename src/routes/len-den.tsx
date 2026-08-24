@@ -53,7 +53,10 @@ function TransactionsPage() {
   const remove = async (id: string) => {
     if (!confirm("क्या आप इसे हटाना चाहते हैं?")) return;
     const { error } = await supabase.from("transactions").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     qc.invalidateQueries({ queryKey: ["transactions"] });
     toast.success("हटा दिया गया");
   };

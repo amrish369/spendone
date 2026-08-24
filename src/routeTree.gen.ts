@@ -10,11 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AddRouteImport } from './routes/add'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CategoryRouteImport } from './routes/category'
+import { Route as LenDenRouteImport } from './routes/len-den'
+import { Route as MonthRouteImport } from './routes/month'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AddRoute = AddRouteImport.update({
+  id: '/add',
+  path: '/add',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -22,31 +31,62 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CategoryRoute = CategoryRouteImport.update({
+  id: '/category',
+  path: '/category',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LenDenRoute = LenDenRouteImport.update({
+  id: '/len-den',
+  path: '/len-den',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MonthRoute = MonthRouteImport.update({
+  id: '/month',
+  path: '/month',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/add': typeof AddRoute
   '/auth': typeof AuthRoute
+  '/category': typeof CategoryRoute
+  '/len-den': typeof LenDenRoute
+  '/month': typeof MonthRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/add': typeof AddRoute
   '/auth': typeof AuthRoute
+  '/category': typeof CategoryRoute
+  '/len-den': typeof LenDenRoute
+  '/month': typeof MonthRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/add': typeof AddRoute
   '/auth': typeof AuthRoute
+  '/category': typeof CategoryRoute
+  '/len-den': typeof LenDenRoute
+  '/month': typeof MonthRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth'
+  fullPaths: '/' | '/add' | '/auth' | '/category' | '/len-den' | '/month'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth'
-  id: '__root__' | '/' | '/auth'
+  to: '/' | '/add' | '/auth' | '/category' | '/len-den' | '/month'
+  id: '__root__' | '/' | '/add' | '/auth' | '/category' | '/len-den' | '/month'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AddRoute: typeof AddRoute
   AuthRoute: typeof AuthRoute
+  CategoryRoute: typeof CategoryRoute
+  LenDenRoute: typeof LenDenRoute
+  MonthRoute: typeof MonthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +98,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/add': {
+      id: '/add'
+      path: '/add'
+      fullPath: '/add'
+      preLoaderRoute: typeof AddRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -65,12 +112,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/category': {
+      id: '/category'
+      path: '/category'
+      fullPath: '/category'
+      preLoaderRoute: typeof CategoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/len-den': {
+      id: '/len-den'
+      path: '/len-den'
+      fullPath: '/len-den'
+      preLoaderRoute: typeof LenDenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/month': {
+      id: '/month'
+      path: '/month'
+      fullPath: '/month'
+      preLoaderRoute: typeof MonthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AddRoute: AddRoute,
   AuthRoute: AuthRoute,
+  CategoryRoute: CategoryRoute,
+  LenDenRoute: LenDenRoute,
+  MonthRoute: MonthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
