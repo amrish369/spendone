@@ -10,33 +10,167 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AddRouteImport } from './routes/add'
+import { Route as AttendanceRouteImport } from './routes/attendance'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CategoryRouteImport } from './routes/category'
+import { Route as ExportRouteImport } from './routes/export'
+import { Route as FundingRouteImport } from './routes/funding'
+import { Route as KhatabookRouteImport } from './routes/khatabook'
+import { Route as LenDenRouteImport } from './routes/len-den'
+import { Route as MonthRouteImport } from './routes/month'
+import { Route as SettingsRouteImport } from './routes/settings'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AddRoute = AddRouteImport.update({
+  id: '/add',
+  path: '/add',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AttendanceRoute = AttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CategoryRoute = CategoryRouteImport.update({
+  id: '/category',
+  path: '/category',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExportRoute = ExportRouteImport.update({
+  id: '/export',
+  path: '/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FundingRoute = FundingRouteImport.update({
+  id: '/funding',
+  path: '/funding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KhatabookRoute = KhatabookRouteImport.update({
+  id: '/khatabook',
+  path: '/khatabook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LenDenRoute = LenDenRouteImport.update({
+  id: '/len-den',
+  path: '/len-den',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MonthRoute = MonthRouteImport.update({
+  id: '/month',
+  path: '/month',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/add': typeof AddRoute
+  '/attendance': typeof AttendanceRoute
+  '/auth': typeof AuthRoute
+  '/category': typeof CategoryRoute
+  '/export': typeof ExportRoute
+  '/funding': typeof FundingRoute
+  '/khatabook': typeof KhatabookRoute
+  '/len-den': typeof LenDenRoute
+  '/month': typeof MonthRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/add': typeof AddRoute
+  '/attendance': typeof AttendanceRoute
+  '/auth': typeof AuthRoute
+  '/category': typeof CategoryRoute
+  '/export': typeof ExportRoute
+  '/funding': typeof FundingRoute
+  '/khatabook': typeof KhatabookRoute
+  '/len-den': typeof LenDenRoute
+  '/month': typeof MonthRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/add': typeof AddRoute
+  '/attendance': typeof AttendanceRoute
+  '/auth': typeof AuthRoute
+  '/category': typeof CategoryRoute
+  '/export': typeof ExportRoute
+  '/funding': typeof FundingRoute
+  '/khatabook': typeof KhatabookRoute
+  '/len-den': typeof LenDenRoute
+  '/month': typeof MonthRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/add'
+    | '/attendance'
+    | '/auth'
+    | '/category'
+    | '/export'
+    | '/funding'
+    | '/khatabook'
+    | '/len-den'
+    | '/month'
+    | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/add'
+    | '/attendance'
+    | '/auth'
+    | '/category'
+    | '/export'
+    | '/funding'
+    | '/khatabook'
+    | '/len-den'
+    | '/month'
+    | '/settings'
+  id:
+    | '__root__'
+    | '/'
+    | '/add'
+    | '/attendance'
+    | '/auth'
+    | '/category'
+    | '/export'
+    | '/funding'
+    | '/khatabook'
+    | '/len-den'
+    | '/month'
+    | '/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AddRoute: typeof AddRoute
+  AttendanceRoute: typeof AttendanceRoute
+  AuthRoute: typeof AuthRoute
+  CategoryRoute: typeof CategoryRoute
+  ExportRoute: typeof ExportRoute
+  FundingRoute: typeof FundingRoute
+  KhatabookRoute: typeof KhatabookRoute
+  LenDenRoute: typeof LenDenRoute
+  MonthRoute: typeof MonthRoute
+  SettingsRoute: typeof SettingsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +182,91 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/add': {
+      id: '/add'
+      path: '/add'
+      fullPath: '/add'
+      preLoaderRoute: typeof AddRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/attendance': {
+      id: '/attendance'
+      path: '/attendance'
+      fullPath: '/attendance'
+      preLoaderRoute: typeof AttendanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/category': {
+      id: '/category'
+      path: '/category'
+      fullPath: '/category'
+      preLoaderRoute: typeof CategoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/export': {
+      id: '/export'
+      path: '/export'
+      fullPath: '/export'
+      preLoaderRoute: typeof ExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/funding': {
+      id: '/funding'
+      path: '/funding'
+      fullPath: '/funding'
+      preLoaderRoute: typeof FundingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/khatabook': {
+      id: '/khatabook'
+      path: '/khatabook'
+      fullPath: '/khatabook'
+      preLoaderRoute: typeof KhatabookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/len-den': {
+      id: '/len-den'
+      path: '/len-den'
+      fullPath: '/len-den'
+      preLoaderRoute: typeof LenDenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/month': {
+      id: '/month'
+      path: '/month'
+      fullPath: '/month'
+      preLoaderRoute: typeof MonthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AddRoute: AddRoute,
+  AttendanceRoute: AttendanceRoute,
+  AuthRoute: AuthRoute,
+  CategoryRoute: CategoryRoute,
+  ExportRoute: ExportRoute,
+  FundingRoute: FundingRoute,
+  KhatabookRoute: KhatabookRoute,
+  LenDenRoute: LenDenRoute,
+  MonthRoute: MonthRoute,
+  SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
