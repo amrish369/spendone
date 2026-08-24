@@ -14,7 +14,223 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      attendance: {
+        Row: {
+          created_at: string
+          da_amount: number
+          date: string
+          id: string
+          staff_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          da_amount?: number
+          date: string
+          id?: string
+          staff_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          da_amount?: number
+          date?: string
+          id?: string
+          staff_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      customers: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          phone: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          phone?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ledger_entries: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_id: string
+          date: string
+          id: string
+          note: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          customer_id: string
+          date: string
+          id?: string
+          note?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_id?: string
+          date?: string
+          id?: string
+          note?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_entries_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+          name?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+        }
+        Relationships: []
+      }
+      staff: {
+        Row: {
+          active: boolean
+          created_at: string
+          da_amount: number
+          id: string
+          name: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          da_amount?: number
+          id?: string
+          name: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          da_amount?: number
+          id?: string
+          name?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          attendance_id: string | null
+          category: string
+          created_at: string
+          date: string
+          description: string | null
+          id: string
+          source: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          attendance_id?: string | null
+          category: string
+          created_at?: string
+          date: string
+          description?: string | null
+          id?: string
+          source?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          attendance_id?: string | null
+          category?: string
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          source?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
