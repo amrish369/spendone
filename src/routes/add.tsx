@@ -25,10 +25,10 @@ export const Route = createFileRoute("/add")({
     typeof search["edit"] === "string" ? { edit: search["edit"] } : {},
   head: () => ({
     meta: [
-      { title: "लेन-देन जोड़ें – खर्च ट्रैकर" },
-      { name: "description", content: "नया खर्च या फंडिंग जोड़ें और श्रेणियाँ प्रबंधित करें।" },
-      { property: "og:title", content: "लेन-देन जोड़ें – खर्च ट्रैकर" },
-      { property: "og:description", content: "नया खर्च या फंडिंग एंट्री बनाएं।" },
+      { title: "Add Transaction – Expense Tracker" },
+      { name: "description", content: "Add a new expense or funding entry and manage your categories." },
+      { property: "og:title", content: "Add Transaction – Expense Tracker" },
+      { property: "og:description", content: "Create a new expense or funding entry." },
     ],
   }),
   component: AddPage,
@@ -60,7 +60,7 @@ function AddPage() {
 
   const save = async (type: "expense" | "funding") => {
     if (!category || !amount) {
-      toast.error("श्रेणी और राशि ज़रूरी है!");
+      toast.error("Category and amount are required!");
       return;
     }
     setBusy(true);
@@ -75,12 +75,12 @@ function AddPage() {
       if (edit) {
         const { error } = await supabase.from("transactions").update(payload).eq("id", edit);
         if (error) throw error;
-        toast.success("अपडेट हो गया!");
+        toast.success("Updated!");
       } else {
         const user_id = await currentUserId();
         const { error } = await supabase.from("transactions").insert({ ...payload, user_id });
         if (error) throw error;
-        toast.success("जुड़ गया!");
+        toast.success("Added!");
       }
       qc.invalidateQueries({ queryKey: ["transactions"] });
       if (edit) navigate({ to: "/len-den" });
@@ -89,7 +89,7 @@ function AddPage() {
         setDescription("");
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "त्रुटि");
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setBusy(false);
     }
@@ -100,16 +100,16 @@ function AddPage() {
     : false;
 
   return (
-    <AppShell title={edit ? "✏️ लेन-देन संपादित करें" : "➕ लेन-देन जोड़ें"}>
+    <AppShell title={edit ? "✏️ Edit transaction" : "➕ Add transaction"}>
       <div className="surface space-y-4 p-4">
         <div className="space-y-1.5">
-          <Label htmlFor="date">तारीख</Label>
+          <Label htmlFor="date">Date</Label>
           <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </div>
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="category">श्रेणी</Label>
+            <Label htmlFor="category">Category</Label>
             <CategoryManager />
           </div>
           <select
@@ -118,8 +118,8 @@ function AddPage() {
             onChange={(e) => setCategory(e.target.value)}
             className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="">श्रेणी चुनें</option>
-            <optgroup label="💰 डिफ़ॉल्ट खर्च">
+            <option value="">Select a category</option>
+            <optgroup label="💰 Default expenses">
               {DEFAULT_CATEGORIES.expense.map((c) => (
                 <option key={c} value={c}>
                   {c}
@@ -127,7 +127,7 @@ function AddPage() {
               ))}
             </optgroup>
             {customCats.filter((c) => c.type === "expense").length > 0 && (
-              <optgroup label="⭐ कस्टम खर्च">
+              <optgroup label="⭐ Custom expenses">
                 {customCats
                   .filter((c) => c.type === "expense")
                   .map((c) => (
@@ -137,7 +137,7 @@ function AddPage() {
                   ))}
               </optgroup>
             )}
-            <optgroup label="💵 डिफ़ॉल्ट फंडिंग">
+            <optgroup label="💵 Default funding">
               {DEFAULT_CATEGORIES.funding.map((c) => (
                 <option key={c} value={c}>
                   {c}
@@ -145,7 +145,7 @@ function AddPage() {
               ))}
             </optgroup>
             {customCats.filter((c) => c.type === "funding").length > 0 && (
-              <optgroup label="⭐ कस्टम फंडिंग">
+              <optgroup label="⭐ Custom funding">
                 {customCats
                   .filter((c) => c.type === "funding")
                   .map((c) => (
@@ -159,7 +159,7 @@ function AddPage() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="amount">राशि (₹)</Label>
+          <Label htmlFor="amount">Amount (₹)</Label>
           <Input
             id="amount"
             type="number"
@@ -171,12 +171,12 @@ function AddPage() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="desc">विवरण (वैकल्पिक)</Label>
+          <Label htmlFor="desc">Description (optional)</Label>
           <Textarea
             id="desc"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="विवरण लिखें..."
+            placeholder="Write a description..."
             rows={2}
           />
         </div>
@@ -187,23 +187,23 @@ function AddPage() {
               disabled={busy}
               onClick={() => save(isEditingFunding ? "funding" : "expense")}
             >
-              अपडेट करें
+              Update
             </Button>
             <Button variant="outline" onClick={() => navigate({ to: "/len-den" })}>
-              रद्द करें
+              Cancel
             </Button>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
             <Button disabled={busy} variant="destructive" onClick={() => save("expense")}>
-              💸 खर्च जोड़ें
+              💸 Add expense
             </Button>
             <Button
               disabled={busy}
               onClick={() => save("funding")}
               className="bg-success text-success-foreground hover:bg-success/90"
             >
-              💰 फंडिंग जोड़ें
+              💰 Add funding
             </Button>
           </div>
         )}
@@ -230,7 +230,7 @@ function CategoryManager() {
     }
     setName("");
     qc.invalidateQueries({ queryKey: ["categories"] });
-    toast.success("श्रेणी जुड़ गई!");
+    toast.success("Category added!");
   };
 
   const remove = async (id: string) => {
@@ -246,38 +246,38 @@ function CategoryManager() {
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          🏷️ श्रेणी प्रबंधन
+          🏷️ Manage categories
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>श्रेणी प्रबंधन</DialogTitle>
+          <DialogTitle>Manage categories</DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-2">
           <Button
             variant={type === "expense" ? "default" : "outline"}
             onClick={() => setType("expense")}
           >
-            खर्च
+            Expense
           </Button>
           <Button
             variant={type === "funding" ? "default" : "outline"}
             onClick={() => setType("funding")}
           >
-            फंडिंग
+            Funding
           </Button>
         </div>
         <div className="flex gap-2">
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="नई श्रेणी का नाम"
+            placeholder="New category name"
           />
-          <Button onClick={add}>जोड़ें</Button>
+          <Button onClick={add}>Add</Button>
         </div>
         <div className="max-h-60 space-y-2 overflow-y-auto">
           {cats.filter((c) => c.type === type).length === 0 && (
-            <p className="text-sm text-muted-foreground">कोई कस्टम श्रेणी नहीं।</p>
+            <p className="text-sm text-muted-foreground">No custom categories.</p>
           )}
           {cats
             .filter((c) => c.type === type)
@@ -287,7 +287,7 @@ function CategoryManager() {
                 className="flex items-center justify-between rounded-lg border px-3 py-2"
               >
                 <span className="text-sm">{c.name}</span>
-                <button onClick={() => remove(c.id)} aria-label="हटाएँ">
+                <button onClick={() => remove(c.id)} aria-label="Delete">
                   <Trash2 className="size-4 text-destructive" />
                 </button>
               </div>
