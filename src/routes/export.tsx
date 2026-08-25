@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { AppShell } from "@/components/AppShell";
@@ -8,14 +8,18 @@ import { hiDate, monthKey, monthLabel, todayISO } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const Route = createFileRoute("/export")({
   head: () => ({
     meta: [
-      { title: "एक्सेल डाउनलोड – खर्च ट्रैकर" },
-      { name: "description", content: "महीने या तारीख रेंज अनुसार खर्च डेटा एक्सेल में डाउनलोड करें।" },
-      { property: "og:title", content: "एक्सेल डाउनलोड – खर्च ट्रैकर" },
-      { property: "og:description", content: "अपना पूरा खर्च डेटा एक्सेल फाइल में लें।" },
+      { title: "Excel Download – Expense Tracker" },
+      {
+        name: "description",
+        content: "Download your expense data as Excel by month, date range or selected categories.",
+      },
+      { property: "og:title", content: "Excel Download – Expense Tracker" },
+      { property: "og:description", content: "Export your full expense data to an Excel file." },
     ],
   }),
   component: ExportPage,
@@ -23,12 +27,12 @@ export const Route = createFileRoute("/export")({
 
 function rows(list: Txn[]) {
   return list.map((t) => ({
-    तारीख: hiDate(t.date),
-    प्रकार: t.type === "expense" ? "खर्च" : "फंडिंग",
-    श्रेणी: t.category,
-    राशि: Number(t.amount),
-    विवरण: t.description ?? "",
-    स्रोत: t.source === "attendance" ? "हाज़िरी DA" : "मैनुअल",
+    Date: hiDate(t.date),
+    Type: t.type === "expense" ? "Expense" : "Funding",
+    Category: t.category,
+    Amount: Number(t.amount),
+    Description: t.description ?? "",
+    Source: t.source === "attendance" ? "Attendance DA" : "Manual",
   }));
 }
 
@@ -42,10 +46,10 @@ function monthlySummary(list: Txn[]) {
     map.set(k, cur);
   });
   return [...map.entries()].sort().map(([k, v]) => ({
-    महीना: monthLabel(k),
-    खर्च: v.expense,
-    फंडिंग: v.income,
-    बैलेंस: v.income - v.expense,
+    Month: monthLabel(k),
+    Expense: v.expense,
+    Funding: v.income,
+    Balance: v.income - v.expense,
   }));
 }
 
@@ -59,23 +63,23 @@ function categorySummary(list: Txn[]) {
     map.set(t.category, cur);
   });
   return [...map.entries()].map(([k, v]) => ({
-    श्रेणी: k,
-    खर्च: v.expense,
-    फंडिंग: v.income,
-    नेट: v.income - v.expense,
-    एंट्री: v.count,
+    Category: k,
+    Expense: v.expense,
+    Funding: v.income,
+    Net: v.income - v.expense,
+    Entries: v.count,
   }));
 }
 
 function download(sheets: { name: string; data: Record<string, unknown>[] }[], file: string) {
   if (sheets.every((s) => s.data.length === 0)) {
-    toast.error("डाउनलोड के लिए कोई डेटा नहीं है!");
+    toast.error("No data to download!");
     return;
   }
   const wb = XLSX.utils.book_new();
   sheets.forEach((s) => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(s.data), s.name));
   XLSX.writeFile(wb, file);
-  toast.success("डाउनलोड शुरू हो गया!");
+  toast.success("Download started!");
 }
 
 function ExportPage() {
@@ -83,107 +87,199 @@ function ExportPage() {
   const [month, setMonth] = useState(todayISO().slice(0, 7));
   const [from, setFrom] = useState(todayISO());
   const [to, setTo] = useState(todayISO());
+  const [selected, setSelected] = useState<string[]>([]);
+  const [catFrom, setCatFrom] = useState("");
+  const [catTo, setCatTo] = useState("");
 
   const monthTxns = txns.filter((t) => monthKey(t.date) === month);
   const rangeTxns = txns.filter((t) => t.date >= from && t.date <= to);
 
+  const allCategories = useMemo(
+    () => [...new Set(txns.map((t) => t.category))].sort(),
+    [txns],
+  );
+
+  const categoryTxns = txns.filter(
+    (t) =>
+      selected.includes(t.category) &&
+      (!catFrom || t.date >= catFrom) &&
+      (!catTo || t.date <= catTo),
+  );
+
+  const toggle = (cat: string) =>
+    setSelected((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
+
   return (
-    <AppShell title="📥 एक्सेल डाउनलोड">
+    <AppShell title="📥 Excel Download">
       <div className="surface space-y-3 p-4">
-        <h2 className="text-base font-semibold">📅 महीना अनुसार</h2>
+        <h2 className="text-base font-semibold">📅 By month</h2>
         <div className="space-y-1.5">
-          <Label htmlFor="month">महीना चुनें</Label>
-          <Input
-            id="month"
-            type="month"
-            value={month}
-            onChange={(e) => setMonth(e.target.value)}
-          />
+          <Label htmlFor="month">Select month</Label>
+          <Input id="month" type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
         </div>
-        <p className="text-xs text-muted-foreground">{monthTxns.length} लेन-देन मिले</p>
+        <p className="text-xs text-muted-foreground">{monthTxns.length} transactions found</p>
         <div className="grid grid-cols-2 gap-3">
           <Button
             onClick={() =>
-              download([{ name: "लेन-देन", data: rows(monthTxns) }], `transactions-${month}.xlsx`)
+              download([{ name: "Transactions", data: rows(monthTxns) }], `transactions-${month}.xlsx`)
             }
           >
-            लेन-देन डाउनलोड
+            Download transactions
           </Button>
           <Button
             variant="secondary"
             onClick={() =>
               download(
-                [{ name: "श्रेणी सारांश", data: categorySummary(monthTxns) }],
+                [{ name: "Category Summary", data: categorySummary(monthTxns) }],
                 `summary-${month}.xlsx`,
               )
             }
           >
-            सारांश डाउनलोड
+            Download summary
           </Button>
         </div>
       </div>
 
       <div className="surface mt-4 space-y-3 p-4">
-        <h2 className="text-base font-semibold">📆 तारीख रेंज अनुसार</h2>
+        <h2 className="text-base font-semibold">📆 By date range</h2>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="ef">कब से</Label>
+            <Label htmlFor="ef">From</Label>
             <Input id="ef" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="et">कब तक</Label>
+            <Label htmlFor="et">To</Label>
             <Input id="et" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">{rangeTxns.length} लेन-देन मिले</p>
+        <p className="text-xs text-muted-foreground">{rangeTxns.length} transactions found</p>
         <Button
           className="w-full"
           onClick={() =>
-            download([{ name: "लेन-देन", data: rows(rangeTxns) }], `transactions-${from}_${to}.xlsx`)
+            download([{ name: "Transactions", data: rows(rangeTxns) }], `transactions-${from}_${to}.xlsx`)
           }
         >
-          रेंज डाउनलोड
+          Download range
         </Button>
       </div>
 
       <div className="surface mt-4 space-y-3 p-4">
-        <h2 className="text-base font-semibold">📚 सभी डेटा</h2>
+        <h2 className="text-base font-semibold">🏷️ By category</h2>
+        {allCategories.length === 0 && (
+          <p className="text-sm text-muted-foreground">No categories yet.</p>
+        )}
+        {allCategories.length > 0 && (
+          <>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => setSelected(allCategories)}>
+                Select all
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setSelected([])}>
+                Clear
+              </Button>
+            </div>
+            <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg border p-3">
+              {allCategories.map((cat) => (
+                <label key={cat} className="flex items-center gap-3 text-sm">
+                  <Checkbox checked={selected.includes(cat)} onCheckedChange={() => toggle(cat)} />
+                  <span>{cat}</span>
+                </label>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="cf">From (optional)</Label>
+                <Input
+                  id="cf"
+                  type="date"
+                  value={catFrom}
+                  onChange={(e) => setCatFrom(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="ct">To (optional)</Label>
+                <Input id="ct" type="date" value={catTo} onChange={(e) => setCatTo(e.target.value)} />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {selected.length} categories selected • {categoryTxns.length} transactions
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Button
+                onClick={() => {
+                  if (selected.length === 0) {
+                    toast.error("Select at least one category!");
+                    return;
+                  }
+                  download(
+                    [{ name: "Transactions", data: rows(categoryTxns) }],
+                    "transactions-categories.xlsx",
+                  );
+                }}
+              >
+                Download selected
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  if (selected.length === 0) {
+                    toast.error("Select at least one category!");
+                    return;
+                  }
+                  download(
+                    [
+                      { name: "Transactions", data: rows(categoryTxns) },
+                      { name: "Category Summary", data: categorySummary(categoryTxns) },
+                    ],
+                    "categories-with-summary.xlsx",
+                  );
+                }}
+              >
+                With summary
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="surface mt-4 space-y-3 p-4">
+        <h2 className="text-base font-semibold">📚 All data</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <Button
             onClick={() =>
               download(
                 [
-                  { name: "लेन-देन", data: rows(txns) },
-                  { name: "मासिक सारांश", data: monthlySummary(txns) },
-                  { name: "श्रेणी सारांश", data: categorySummary(txns) },
+                  { name: "Transactions", data: rows(txns) },
+                  { name: "Monthly Summary", data: monthlySummary(txns) },
+                  { name: "Category Summary", data: categorySummary(txns) },
                 ],
                 "expense-tracker-all.xlsx",
               )
             }
           >
-            सभी शीट (एक फाइल)
+            All sheets (one file)
           </Button>
           <Button
             variant="secondary"
-            onClick={() => download([{ name: "लेन-देन", data: rows(txns) }], "transactions.xlsx")}
+            onClick={() => download([{ name: "Transactions", data: rows(txns) }], "transactions.xlsx")}
           >
-            सिर्फ़ लेन-देन
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() =>
-              download([{ name: "मासिक सारांश", data: monthlySummary(txns) }], "monthly.xlsx")
-            }
-          >
-            मासिक सारांश
+            Transactions only
           </Button>
           <Button
             variant="secondary"
             onClick={() =>
-              download([{ name: "श्रेणी सारांश", data: categorySummary(txns) }], "category.xlsx")
+              download([{ name: "Monthly Summary", data: monthlySummary(txns) }], "monthly.xlsx")
             }
           >
-            श्रेणी सारांश
+            Monthly summary
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() =>
+              download([{ name: "Category Summary", data: categorySummary(txns) }], "category.xlsx")
+            }
+          >
+            Category summary
           </Button>
         </div>
       </div>
