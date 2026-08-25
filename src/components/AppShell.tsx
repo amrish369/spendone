@@ -8,16 +8,16 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useEffect } from "react";
 
 const NAV = [
-  { to: "/", label: "🏠 मुख्य" },
-  { to: "/len-den", label: "📝 लेन-देन" },
-  { to: "/add", label: "➕ जोड़ें" },
-  { to: "/category", label: "📈 श्रेणी" },
-  { to: "/month", label: "📅 मासिक" },
-  { to: "/attendance", label: "🧑‍🏭 हाज़िरी" },
-  { to: "/khatabook", label: "📒 खाता-बही" },
-  { to: "/funding", label: "💬 मैसेज" },
-  { to: "/export", label: "📥 एक्सेल" },
-  { to: "/settings", label: "⚙️ सेटिंग्स" },
+  { to: "/", label: "🏠 Home" },
+  { to: "/len-den", label: "📝 Transactions" },
+  { to: "/add", label: "➕ Add" },
+  { to: "/category", label: "📈 Categories" },
+  { to: "/month", label: "📅 Monthly" },
+  { to: "/attendance", label: "🧑‍🏭 Attendance" },
+  { to: "/khatabook", label: "📒 Ledger" },
+  { to: "/funding", label: "💬 Message" },
+  { to: "/export", label: "📥 Excel" },
+  { to: "/settings", label: "⚙️ Settings" },
 ];
 
 export function AppShell({ title, children }: { title: string; children: ReactNode }) {
@@ -49,7 +49,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <button
-              aria-label="मेनू"
+              aria-label="Menu"
               className="rounded-lg p-2 transition-colors hover:bg-white/15"
             >
               <Menu className="size-6" />
@@ -57,7 +57,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
           </SheetTrigger>
           <SheetContent side="left" className="w-72 border-sidebar-border bg-sidebar p-0">
             <div className="brand-gradient px-5 py-6">
-              <p className="text-lg font-semibold text-primary-foreground">📋 मेनू</p>
+              <p className="text-lg font-semibold text-primary-foreground">📋 Menu</p>
               <p className="mt-1 truncate text-xs text-primary-foreground/80">{user.email}</p>
             </div>
             <nav className="flex flex-col gap-1 p-3">
@@ -79,7 +79,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
                 onClick={signOut}
                 className="mt-2 flex items-center gap-2 rounded-lg px-4 py-3 text-left text-base font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
               >
-                <LogOut className="size-4" /> लॉगआउट
+                <LogOut className="size-4" /> Logout
               </button>
             </nav>
           </SheetContent>
@@ -89,7 +89,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
           variant="ghost"
           size="icon"
           onClick={signOut}
-          aria-label="लॉगआउट"
+          aria-label="Logout"
           className="text-primary-foreground hover:bg-white/15"
         >
           <LogOut className="size-5" />
