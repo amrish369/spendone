@@ -17,10 +17,10 @@ import { Trash2 } from "lucide-react";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "सेटिंग्स – स्टाफ और DA – खर्च ट्रैकर" },
-      { name: "description", content: "हर स्टाफ के लिए दैनिक भत्ता (DA) राशि सेट करें।" },
-      { property: "og:title", content: "सेटिंग्स – स्टाफ और DA" },
-      { property: "og:description", content: "स्टाफ जोड़ें और उनका DA मूल्य तय करें।" },
+      { title: "Settings – Staff & DA – Expense Tracker" },
+      { name: "description", content: "Set the daily allowance (DA) amount for each staff member." },
+      { property: "og:title", content: "Settings – Staff & DA" },
+      { property: "og:description", content: "Add staff members and set their DA value." },
     ],
   }),
   component: SettingsPage,
@@ -31,7 +31,7 @@ function SettingsPage() {
   const { user } = useAuth();
   const { data: staff = [] } = useStaff();
   const [name, setName] = useState("");
-  const [role, setRole] = useState<string>("Supervisor");
+  const [role, setRole] = useState<string>("Staff");
   const [da, setDa] = useState("");
   const [bulkDa, setBulkDa] = useState("");
 
@@ -39,7 +39,7 @@ function SettingsPage() {
 
   const addStaff = async () => {
     if (!name.trim()) {
-      toast.error("नाम ज़रूरी है!");
+      toast.error("Name is required!");
       return;
     }
     const user_id = await currentUserId();
@@ -53,7 +53,7 @@ function SettingsPage() {
     setName("");
     setDa("");
     refresh();
-    toast.success("स्टाफ जुड़ गया!");
+    toast.success("Staff member added!");
   };
 
   const update = async (id: string, patch: Partial<Staff>) => {
@@ -66,20 +66,20 @@ function SettingsPage() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("इस स्टाफ को हटाएँ? उनकी हाज़िरी भी हट जाएगी।")) return;
+    if (!confirm("Remove this staff member? Their attendance will be deleted too.")) return;
     const { error } = await supabase.from("staff").delete().eq("id", id);
     if (error) {
       toast.error(error.message);
       return;
     }
     refresh();
-    toast.success("हटा दिया गया");
+    toast.success("Removed");
   };
 
   const applyBulk = async () => {
     const value = Number(bulkDa);
     if (!value) {
-      toast.error("पहले DA राशि लिखें!");
+      toast.error("Enter a DA amount first!");
       return;
     }
     const { error } = await supabase
@@ -92,30 +92,30 @@ function SettingsPage() {
     }
     setBulkDa("");
     refresh();
-    toast.success("सभी स्टाफ का DA अपडेट हो गया!");
+    toast.success("DA updated for all staff!");
   };
 
   return (
-    <AppShell title="⚙️ सेटिंग्स">
+    <AppShell title="⚙️ Settings">
       <div className="surface p-4">
-        <p className="text-sm text-muted-foreground">लॉगिन ईमेल</p>
+        <p className="text-sm text-muted-foreground">Signed in as</p>
         <p className="font-medium">{user?.email}</p>
       </div>
 
-      <h2 className="mt-6 mb-2 text-base font-semibold">➕ नया स्टाफ जोड़ें</h2>
+      <h2 className="mt-6 mb-2 text-base font-semibold">➕ Add new staff</h2>
       <div className="surface space-y-3 p-4">
         <div className="space-y-1.5">
-          <Label htmlFor="sname">नाम</Label>
+          <Label htmlFor="sname">Name</Label>
           <Input
             id="sname"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="जैसे: रमेश कुमार"
+            placeholder="e.g. Ramesh Kumar"
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="srole">पद</Label>
+            <Label htmlFor="srole">Type</Label>
             <select
               id="srole"
               value={role}
@@ -130,7 +130,7 @@ function SettingsPage() {
             </select>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="sda">DA राशि (₹/दिन)</Label>
+            <Label htmlFor="sda">DA amount (₹/day)</Label>
             <Input
               id="sda"
               type="number"
@@ -142,55 +142,53 @@ function SettingsPage() {
           </div>
         </div>
         <p className="text-xs text-muted-foreground">
-          हाज़िरी लगाते ही यह राशि "{categoryForRole(role)}" श्रेणी में खर्च के रूप में अपने आप जुड़
-          जाएगी।
+          When you mark attendance, this amount is added automatically as an expense under "
+          {categoryForRole(role)}".
         </p>
         <Button onClick={addStaff} className="w-full">
-          स्टाफ जोड़ें
+          Add staff
         </Button>
       </div>
 
-      <h2 className="mt-6 mb-2 text-base font-semibold">💵 सभी का DA एक साथ सेट करें</h2>
+      <h2 className="mt-6 mb-2 text-base font-semibold">💵 Set DA for everyone at once</h2>
       <div className="surface flex gap-2 p-4">
         <Input
           type="number"
           value={bulkDa}
           onChange={(e) => setBulkDa(e.target.value)}
-          placeholder="जैसे: 300"
+          placeholder="e.g. 300"
         />
         <Button variant="secondary" onClick={applyBulk}>
-          लागू करें
+          Apply
         </Button>
       </div>
 
-      <h2 className="mt-6 mb-2 text-base font-semibold">👥 स्टाफ सूची</h2>
+      <h2 className="mt-6 mb-2 text-base font-semibold">👥 Staff list</h2>
       <div className="space-y-3">
-        {staff.length === 0 && (
-          <p className="text-sm text-muted-foreground">अभी कोई स्टाफ नहीं।</p>
-        )}
+        {staff.length === 0 && <p className="text-sm text-muted-foreground">No staff yet.</p>}
         {staff.map((s) => (
           <div key={s.id} className="surface p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="truncate font-semibold">{s.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {s.role} • वर्तमान DA {money(Number(s.da_amount))}
+                  Current DA {money(Number(s.da_amount))}
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <Switch
                   checked={s.active}
                   onCheckedChange={(v) => update(s.id, { active: v })}
-                  aria-label="सक्रिय"
+                  aria-label="Active"
                 />
-                <button onClick={() => remove(s.id)} aria-label="हटाएँ">
+                <button onClick={() => remove(s.id)} aria-label="Remove">
                   <Trash2 className="size-4 text-destructive" />
                 </button>
               </div>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs">DA राशि</Label>
+                <Label className="text-xs">DA amount</Label>
                 <Input
                   type="number"
                   defaultValue={s.da_amount}
@@ -201,7 +199,7 @@ function SettingsPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">पद</Label>
+                <Label className="text-xs">Type</Label>
                 <select
                   value={s.role}
                   onChange={(e) => update(s.id, { role: e.target.value })}
