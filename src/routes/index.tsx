@@ -101,7 +101,7 @@ function Dashboard() {
       <div className="surface divide-y">
         {isLoading && <p className="p-4 text-sm text-muted-foreground">Loading...</p>}
         {!isLoading && txns.length === 0 && (
-          <p className="p-4 text-sm text-muted-foreground">अभी कोई लेन-देन नहीं।</p>
+          <p className="p-4 text-sm text-muted-foreground">No transactions yet.</p>
         )}
         {txns.slice(0, 8).map((t) => (
           <div key={t.id} className="flex items-center justify-between gap-3 p-3">
@@ -125,7 +125,7 @@ function Dashboard() {
       </div>
       <div className="mt-3 text-center">
         <Button asChild variant="outline">
-          <Link to="/len-den">सभी लेन-देन देखें</Link>
+          <Link to="/len-den">View all transactions</Link>
         </Button>
       </div>
     </AppShell>
