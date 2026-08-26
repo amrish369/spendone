@@ -13,10 +13,10 @@ import { Pencil, Trash2 } from "lucide-react";
 export const Route = createFileRoute("/len-den")({
   head: () => ({
     meta: [
-      { title: "लेन-देन सूची – खर्च ट्रैकर" },
-      { name: "description", content: "सभी खर्च और फंडिंग खोजें, संपादित करें या हटाएँ।" },
-      { property: "og:title", content: "लेन-देन सूची – खर्च ट्रैकर" },
-      { property: "og:description", content: "सभी लेन-देन एक जगह खोजें और प्रबंधित करें।" },
+      { title: "Transactions – Expense Tracker" },
+      { name: "description", content: "Search, edit or delete all your expense and funding entries." },
+      { property: "og:title", content: "Transactions – Expense Tracker" },
+      { property: "og:description", content: "Find and manage every transaction in one place." },
     ],
   }),
   component: TransactionsPage,
@@ -51,21 +51,21 @@ function TransactionsPage() {
   }, [filtered]);
 
   const remove = async (id: string) => {
-    if (!confirm("क्या आप इसे हटाना चाहते हैं?")) return;
+    if (!confirm("Delete this transaction?")) return;
     const { error } = await supabase.from("transactions").delete().eq("id", id);
     if (error) {
       toast.error(error.message);
       return;
     }
     qc.invalidateQueries({ queryKey: ["transactions"] });
-    toast.success("हटा दिया गया");
+    toast.success("Deleted");
   };
 
   return (
-    <AppShell title="📝 लेन-देन सूची">
+    <AppShell title="📝 Transactions">
       <div className="flex gap-2">
         <Input
-          placeholder="🔍 खोजें..."
+          placeholder="🔍 Search..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -74,22 +74,22 @@ function TransactionsPage() {
           onChange={(e) => setType(e.target.value)}
           className="h-10 rounded-md border border-input bg-background px-3 text-sm"
         >
-          <option value="all">सभी</option>
-          <option value="expense">खर्च</option>
-          <option value="funding">फंडिंग</option>
+          <option value="all">All</option>
+          <option value="expense">Expense</option>
+          <option value="funding">Funding</option>
         </select>
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-3">
-        <Stat label="खर्च" value={money(totals.expense)} tone="expense" />
-        <Stat label="फंडिंग" value={money(totals.income)} tone="income" />
-        <Stat label="बैलेंस" value={money(totals.income - totals.expense)} tone="balance" />
+        <Stat label="Expenses" value={money(totals.expense)} tone="expense" />
+        <Stat label="Funding" value={money(totals.income)} tone="income" />
+        <Stat label="Balance" value={money(totals.income - totals.expense)} tone="balance" />
       </div>
 
       <div className="surface mt-4 divide-y">
-        {isLoading && <p className="p-4 text-sm text-muted-foreground">लोड हो रहा है...</p>}
+        {isLoading && <p className="p-4 text-sm text-muted-foreground">Loading...</p>}
         {!isLoading && filtered.length === 0 && (
-          <p className="p-4 text-sm text-muted-foreground">कोई लेन-देन नहीं मिला।</p>
+          <p className="p-4 text-sm text-muted-foreground">No transactions found.</p>
         )}
         {filtered.map((t) => (
           <div key={t.id} className="flex items-center gap-3 p-3">
@@ -98,7 +98,7 @@ function TransactionsPage() {
               <p className="truncate text-xs text-muted-foreground">
                 {hiDate(t.date)}
                 {t.description ? ` • ${t.description}` : ""}
-                {t.source === "attendance" ? " • हाज़िरी DA" : ""}
+                {t.source === "attendance" ? " • Attendance DA" : ""}
               </p>
             </div>
             <span
@@ -109,12 +109,12 @@ function TransactionsPage() {
               {t.type === "expense" ? "-" : "+"}
               {money(Number(t.amount))}
             </span>
-            <Button asChild variant="ghost" size="icon" aria-label="संपादित करें">
+            <Button asChild variant="ghost" size="icon" aria-label="Edit">
               <Link to="/add" search={{ edit: t.id }}>
                 <Pencil className="size-4" />
               </Link>
             </Button>
-            <button onClick={() => remove(t.id)} aria-label="हटाएँ">
+            <button onClick={() => remove(t.id)} aria-label="Delete">
               <Trash2 className="size-4 text-destructive" />
             </button>
           </div>

@@ -9,10 +9,10 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/month")({
   head: () => ({
     meta: [
-      { title: "मासिक सारांश – खर्च ट्रैकर" },
-      { name: "description", content: "हर महीने का खर्च, फंडिंग और बैलेंस, तारीख अनुसार विवरण।" },
-      { property: "og:title", content: "मासिक सारांश – खर्च ट्रैकर" },
-      { property: "og:description", content: "महीने और तारीख अनुसार खर्च का सारांश।" },
+      { title: "Monthly Summary – Expense Tracker" },
+      { name: "description", content: "Monthly expenses, funding and balance with day-wise details." },
+      { property: "og:title", content: "Monthly Summary – Expense Tracker" },
+      { property: "og:description", content: "Expense summary by month and date." },
     ],
   }),
   component: MonthPage,
@@ -45,28 +45,28 @@ function MonthPage() {
     .reduce((s, t) => s + Number(t.amount), 0);
 
   return (
-    <AppShell title="📅 मासिक सारांश">
+    <AppShell title="📅 Monthly Summary">
       <div className="space-y-3">
-        {months.length === 0 && <p className="text-sm text-muted-foreground">कोई डेटा नहीं।</p>}
+        {months.length === 0 && <p className="text-sm text-muted-foreground">No data yet.</p>}
         {months.map(([key, v]) => (
           <div key={key} className="surface p-4">
             <div className="flex items-center justify-between">
               <p className="font-semibold">{monthLabel(key)}</p>
               <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                {v.count} एंट्री
+                {v.count} entries
               </span>
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-center">
               <div>
-                <p className="text-xs text-muted-foreground">खर्च</p>
+                <p className="text-xs text-muted-foreground">Expenses</p>
                 <p className="num font-semibold text-destructive">{money(v.expense)}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">फंडिंग</p>
+                <p className="text-xs text-muted-foreground">Funding</p>
                 <p className="num font-semibold text-success">{money(v.income)}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">बैलेंस</p>
+                <p className="text-xs text-muted-foreground">Balance</p>
                 <p className="num font-semibold text-primary">{money(v.income - v.expense)}</p>
               </div>
             </div>
@@ -74,7 +74,7 @@ function MonthPage() {
         ))}
       </div>
 
-      <h3 className="mt-6 mb-2 text-base font-semibold">📆 किसी तारीख के लेन-देन देखें</h3>
+      <h3 className="mt-6 mb-2 text-base font-semibold">📆 View transactions for a date</h3>
       <div className="flex flex-wrap gap-2">
         <Input
           type="date"
@@ -82,7 +82,7 @@ function MonthPage() {
           value={pickedDate}
           onChange={(e) => setPickedDate(e.target.value)}
         />
-        <Button onClick={() => setActiveDate(pickedDate)}>दिखाएँ</Button>
+        <Button onClick={() => setActiveDate(pickedDate)}>Show</Button>
         <Button
           variant="outline"
           onClick={() => {
@@ -90,21 +90,21 @@ function MonthPage() {
             setActiveDate("");
           }}
         >
-          साफ़ करें
+          Clear
         </Button>
       </div>
 
       {activeDate && (
         <div className="mt-4">
           <div className="grid grid-cols-3 gap-3">
-            <Stat label="खर्च" value={money(dateExpense)} tone="expense" />
-            <Stat label="फंडिंग" value={money(dateIncome)} tone="income" />
-            <Stat label="बैलेंस" value={money(dateIncome - dateExpense)} tone="balance" />
+            <Stat label="Expenses" value={money(dateExpense)} tone="expense" />
+            <Stat label="Funding" value={money(dateIncome)} tone="income" />
+            <Stat label="Balance" value={money(dateIncome - dateExpense)} tone="balance" />
           </div>
           <div className="surface mt-3 divide-y">
             {dateList.length === 0 && (
               <p className="p-4 text-sm text-muted-foreground">
-                {hiDate(activeDate)} को कोई लेन-देन नहीं।
+                {hiDate(activeDate)} has no transactions.
               </p>
             )}
             {dateList.map((t) => (
