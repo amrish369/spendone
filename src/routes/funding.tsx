@@ -11,13 +11,13 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/funding")({
   head: () => ({
     meta: [
-      { title: "मैसेज जनरेटर – खर्च ट्रैकर" },
+      { title: "Message Generator – Expense Tracker" },
       {
         name: "description",
-        content: "तारीख रेंज चुनकर खर्च का हिसाब मैसेज बनाएं और व्हाट्सएप पर भेजें।",
+        content: "Pick a date range, build an expense summary message and send it on WhatsApp.",
       },
-      { property: "og:title", content: "मैसेज जनरेटर – खर्च ट्रैकर" },
-      { property: "og:description", content: "खर्च का हिसाब मैसेज बनाकर व्हाट्सएप पर भेजें।" },
+      { property: "og:title", content: "Message Generator – Expense Tracker" },
+      { property: "og:description", content: "Create an expense summary message and share it on WhatsApp." },
     ],
   }),
   component: FundingPage,
@@ -33,11 +33,11 @@ function FundingPage() {
 
   const generate = () => {
     if (!from || !to) {
-      toast.error("कृपया तारीख रेंज चुनें!");
+      toast.error("Please pick a date range!");
       return;
     }
     if (from > to) {
-      toast.error('"कब से" तारीख "कब तक" से पहले होनी चाहिए!');
+      toast.error('"From" date must be before "To" date!');
       return;
     }
     const filtered = txns.filter((t) => t.date >= from && t.date <= to);
@@ -78,21 +78,21 @@ function FundingPage() {
   };
 
   return (
-    <AppShell title="💬 मैसेज जनरेटर">
+    <AppShell title="💬 Message Generator">
       <div className="surface space-y-3 p-4">
-        <h2 className="text-base font-semibold">📅 तारीख रेंज चुनें</h2>
+        <h2 className="text-base font-semibold">📅 Select date range</h2>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="from">कब से</Label>
+            <Label htmlFor="from">From</Label>
             <Input id="from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="to">कब तक</Label>
+            <Label htmlFor="to">To</Label>
             <Input id="to" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="pending">पेंडिंग राशि (₹)</Label>
+          <Label htmlFor="pending">Pending amount (₹)</Label>
           <Input
             id="pending"
             type="number"
@@ -102,19 +102,19 @@ function FundingPage() {
           />
         </div>
         <Button className="w-full" onClick={generate}>
-          मैसेज जनरेट करें
+          Generate message
         </Button>
       </div>
 
       {noData && (
         <p className="mt-4 text-center text-sm text-muted-foreground">
-          इस तारीख रेंज में कोई डेटा नहीं मिला।
+          No data found in this date range.
         </p>
       )}
 
       {message && (
         <div className="surface mt-4 p-4">
-          <h3 className="mb-2 text-base font-semibold">जनरेटेड मैसेज</h3>
+          <h3 className="mb-2 text-base font-semibold">Generated message</h3>
           <pre className="num max-h-96 overflow-auto whitespace-pre-wrap rounded-lg bg-muted p-3 text-sm">
             {message}
           </pre>
@@ -123,10 +123,10 @@ function FundingPage() {
               variant="outline"
               onClick={() => {
                 navigator.clipboard.writeText(message);
-                toast.success("मैसेज कॉपी हो गया!");
+                toast.success("Message copied!");
               }}
             >
-              📋 कॉपी करें
+              📋 Copy
             </Button>
             <Button
               className="bg-success text-success-foreground hover:bg-success/90"
@@ -134,7 +134,7 @@ function FundingPage() {
                 window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank")
               }
             >
-              📲 व्हाट्सएप
+              📲 WhatsApp
             </Button>
           </div>
         </div>
