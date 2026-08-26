@@ -5,7 +5,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AppShell, Stat } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAttendance, useStaff, currentUserId, type Staff } from "@/lib/data";
-import { categoryForRole } from "@/lib/constants";
 import { money, todayISO, hiDate } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -72,9 +71,9 @@ function AttendancePage() {
           user_id,
           date,
           type: "expense",
-          category: categoryForRole(member.role),
+          category: member.name,
           amount,
-          description: `${member.name} – DA`,
+          description: null,
           source: "attendance",
           attendance_id: saved.id,
         });
