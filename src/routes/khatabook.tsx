@@ -21,10 +21,10 @@ import { ArrowLeft, Trash2 } from "lucide-react";
 export const Route = createFileRoute("/khatabook")({
   head: () => ({
     meta: [
-      { title: "खाता-बही – ग्राहक हिसाब" },
-      { name: "description", content: "ग्राहकों का लेन-देन खाता: कितना दिया, कितना लिया, बकाया।" },
-      { property: "og:title", content: "खाता-बही – ग्राहक हिसाब" },
-      { property: "og:description", content: "ग्राहकों का पूरा उधार-जमा हिसाब रखें।" },
+      { title: "Ledger – Customer Accounts" },
+      { name: "description", content: "Customer ledger: how much you gave, took and the outstanding balance." },
+      { property: "og:title", content: "Ledger – Customer Accounts" },
+      { property: "og:description", content: "Keep a full credit and payment record for every customer." },
     ],
   }),
   component: KhatabookPage,
@@ -57,7 +57,7 @@ function KhatabookPage() {
 
   const addCustomer = async () => {
     if (!newName.trim()) {
-      toast.error("नाम ज़रूरी है!");
+      toast.error("Name is required!");
       return;
     }
     const user_id = await currentUserId();
@@ -71,7 +71,7 @@ function KhatabookPage() {
     setNewName("");
     setNewPhone("");
     qc.invalidateQueries({ queryKey: ["customers"] });
-    toast.success("ग्राहक जुड़ गया!");
+    toast.success("Customer added!");
   };
 
   const active = customers.find((c) => c.id === openId);
@@ -88,34 +88,34 @@ function KhatabookPage() {
   }
 
   return (
-    <AppShell title="📒 खाता-बही">
+    <AppShell title="📒 Ledger">
       <div className="grid grid-cols-2 gap-3">
-        <Stat label="कुल लेना है" value={money(totals.receive)} tone="income" />
-        <Stat label="कुल देना है" value={money(totals.pay)} tone="expense" />
+        <Stat label="Total to receive" value={money(totals.receive)} tone="income" />
+        <Stat label="Total to pay" value={money(totals.pay)} tone="expense" />
       </div>
 
       <div className="mt-4 flex items-center justify-between">
-        <h2 className="text-base font-semibold">ग्राहक सूची</h2>
+        <h2 className="text-base font-semibold">Customers</h2>
         <Dialog>
           <DialogTrigger asChild>
-            <Button size="sm">➕ नया ग्राहक</Button>
+            <Button size="sm">➕ New customer</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>नया ग्राहक जोड़ें</DialogTitle>
+              <DialogTitle>Add a new customer</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label htmlFor="cname">नाम</Label>
+                <Label htmlFor="cname">Name</Label>
                 <Input
                   id="cname"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  placeholder="रमेश कुमार"
+                  placeholder="John Doe"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="cphone">मोबाइल</Label>
+                <Label htmlFor="cphone">Phone</Label>
                 <Input
                   id="cphone"
                   value={newPhone}
@@ -124,7 +124,7 @@ function KhatabookPage() {
                 />
               </div>
               <Button className="w-full" onClick={addCustomer}>
-                सेव करें
+                Save
               </Button>
             </div>
           </DialogContent>
@@ -133,7 +133,7 @@ function KhatabookPage() {
 
       <div className="surface mt-3 divide-y">
         {customers.length === 0 && (
-          <p className="p-4 text-sm text-muted-foreground">अभी कोई ग्राहक नहीं।</p>
+          <p className="p-4 text-sm text-muted-foreground">No customers yet.</p>
         )}
         {customers.map((c) => {
           const bal = balances.get(c.id) ?? 0;
@@ -150,7 +150,7 @@ function KhatabookPage() {
               <span
                 className={`num text-sm font-bold ${bal >= 0 ? "text-success" : "text-destructive"}`}
               >
-                {bal >= 0 ? "लेना" : "देना"} {money(Math.abs(bal))}
+                {bal >= 0 ? "To receive" : "To pay"} {money(Math.abs(bal))}
               </span>
             </button>
           );
@@ -184,7 +184,7 @@ function CustomerLedger({
 
   const add = async () => {
     if (!amount) {
-      toast.error("राशि ज़रूरी है!");
+      toast.error("Amount is required!");
       return;
     }
     const user_id = await currentUserId();
@@ -203,7 +203,7 @@ function CustomerLedger({
     setAmount("");
     setNote("");
     qc.invalidateQueries({ queryKey: ["ledger"] });
-    toast.success("एंट्री जुड़ गई!");
+    toast.success("Entry added!");
   };
 
   const remove = async (id: string) => {
@@ -216,7 +216,7 @@ function CustomerLedger({
   };
 
   const reminder = () => {
-    const text = `नमस्ते ${name} जी, आपका बकाया ₹${Math.abs(balance)} है। कृपया भुगतान करें। धन्यवाद।`;
+    const text = `Hello ${name}, your outstanding balance is ₹${Math.abs(balance)}. Please make the payment. Thank you.`;
     const num = (phone ?? "").replace(/\D/g, "");
     window.open(
       `https://wa.me/${num ? "91" + num.slice(-10) : ""}?text=${encodeURIComponent(text)}`,
@@ -228,28 +228,28 @@ function CustomerLedger({
     <AppShell title={`📒 ${name}`}>
       <div className="flex items-center justify-between">
         <Button variant="outline" size="sm" onClick={onBack}>
-          <ArrowLeft className="mr-1 size-4" /> वापस
+          <ArrowLeft className="mr-1 size-4" /> Back
         </Button>
         <Button size="sm" variant="secondary" onClick={reminder}>
-          📲 रिमाइंडर भेजें
+          📲 Send reminder
         </Button>
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-3">
-        <Stat label="दिया" value={money(given)} tone="income" />
-        <Stat label="लिया" value={money(taken)} tone="expense" />
+        <Stat label="Given" value={money(given)} tone="income" />
+        <Stat label="Taken" value={money(taken)} tone="expense" />
         <Stat
-          label={balance >= 0 ? "लेना है" : "देना है"}
+          label={balance >= 0 ? "To receive" : "To pay"}
           value={money(Math.abs(balance))}
           tone="balance"
         />
       </div>
 
       <div className="surface mt-4 space-y-3 p-4">
-        <h3 className="text-base font-semibold">नया लेन-देन</h3>
+        <h3 className="text-base font-semibold">New entry</h3>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="ldate">तारीख</Label>
+            <Label htmlFor="ldate">Date</Label>
             <Input
               id="ldate"
               type="date"
@@ -258,20 +258,20 @@ function CustomerLedger({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="ltype">प्रकार</Label>
+            <Label htmlFor="ltype">Type</Label>
             <select
               id="ltype"
               value={type}
               onChange={(e) => setType(e.target.value as "given" | "taken")}
               className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="given">मैंने दिया</option>
-              <option value="taken">मैंने लिया</option>
+              <option value="given">I gave</option>
+              <option value="taken">I took</option>
             </select>
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="lamt">राशि (₹)</Label>
+          <Label htmlFor="lamt">Amount (₹)</Label>
           <Input
             id="lamt"
             type="number"
@@ -281,23 +281,23 @@ function CustomerLedger({
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="lnote">नोट</Label>
+          <Label htmlFor="lnote">Note</Label>
           <Input
             id="lnote"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="वैकल्पिक"
+            placeholder="Optional"
           />
         </div>
         <Button className="w-full" onClick={add}>
-          एंट्री जोड़ें
+          Add entry
         </Button>
       </div>
 
-      <h3 className="mt-6 mb-2 text-base font-semibold">पिछले लेन-देन</h3>
+      <h3 className="mt-6 mb-2 text-base font-semibold">Previous entries</h3>
       <div className="surface divide-y">
         {entries.length === 0 && (
-          <p className="p-4 text-sm text-muted-foreground">कोई एंट्री नहीं।</p>
+          <p className="p-4 text-sm text-muted-foreground">No entries yet.</p>
         )}
         {entries.map((e) => (
           <div key={e.id} className="flex items-center justify-between gap-3 p-3">
@@ -310,9 +310,9 @@ function CustomerLedger({
                 e.type === "given" ? "text-success" : "text-destructive"
               }`}
             >
-              {e.type === "given" ? "दिया" : "लिया"} {money(Number(e.amount))}
+              {e.type === "given" ? "Given" : "Taken"} {money(Number(e.amount))}
             </span>
-            <button onClick={() => remove(e.id)} aria-label="हटाएँ">
+            <button onClick={() => remove(e.id)} aria-label="Delete">
               <Trash2 className="size-4 text-destructive" />
             </button>
           </div>
