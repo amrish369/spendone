@@ -40,9 +40,9 @@ function fmtTime(t: string | null | undefined) {
 /** Duration between start and close time in "Xh Ym" form (assumes same-day). */
 function duration(start: string | null, close: string | null) {
   if (!start || !close) return "—";
-  const [sh, sm] = start.split(":").map(Number);
-  const [ch, cm] = close.split(":").map(Number);
-  let mins = ch * 60 + cm - (sh * 60 + sm);
+  const sp = start.split(":").map(Number);
+  const cp = close.split(":").map(Number);
+  let mins = (cp[0] ?? 0) * 60 + (cp[1] ?? 0) - ((sp[0] ?? 0) * 60 + (sp[1] ?? 0));
   if (mins < 0) mins += 24 * 60; // crossed midnight
   const h = Math.floor(mins / 60);
   const m = mins % 60;
