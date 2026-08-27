@@ -1,0 +1,1 @@
+ALTER TABLE public.staff ADD COLUMN IF NOT EXISTS salary numeric NOT NULL DEFAULT 0;
