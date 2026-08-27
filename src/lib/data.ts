@@ -106,6 +106,18 @@ export function useWorkLogs() {
   });
 }
 
+export type WorkDay = { id: string; date: string; working: boolean };
+
+export function useWorkDays() {
+  return useQuery({
+    queryKey: ["work_days"],
+    queryFn: () =>
+      unwrap<WorkDay[]>(
+        supabase.from("work_days").select("*").order("date", { ascending: true }),
+      ),
+  });
+}
+
 export function useCustomers() {
   return useQuery({
     queryKey: ["customers"],

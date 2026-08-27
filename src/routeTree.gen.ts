@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AddRouteImport } from './routes/add'
 import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as CategoryRouteImport } from './routes/category'
 import { Route as ExportRouteImport } from './routes/export'
 import { Route as FundingRouteImport } from './routes/funding'
@@ -40,6 +41,11 @@ const AttendanceRoute = AttendanceRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CategoryRoute = CategoryRouteImport.update({
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/add': typeof AddRoute
   '/attendance': typeof AttendanceRoute
   '/auth': typeof AuthRoute
+  '/calendar': typeof CalendarRoute
   '/category': typeof CategoryRoute
   '/export': typeof ExportRoute
   '/funding': typeof FundingRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/add': typeof AddRoute
   '/attendance': typeof AttendanceRoute
   '/auth': typeof AuthRoute
+  '/calendar': typeof CalendarRoute
   '/category': typeof CategoryRoute
   '/export': typeof ExportRoute
   '/funding': typeof FundingRoute
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/add': typeof AddRoute
   '/attendance': typeof AttendanceRoute
   '/auth': typeof AuthRoute
+  '/calendar': typeof CalendarRoute
   '/category': typeof CategoryRoute
   '/export': typeof ExportRoute
   '/funding': typeof FundingRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/add'
     | '/attendance'
     | '/auth'
+    | '/calendar'
     | '/category'
     | '/export'
     | '/funding'
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/add'
     | '/attendance'
     | '/auth'
+    | '/calendar'
     | '/category'
     | '/export'
     | '/funding'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/add'
     | '/attendance'
     | '/auth'
+    | '/calendar'
     | '/category'
     | '/export'
     | '/funding'
@@ -176,6 +188,7 @@ export interface RootRouteChildren {
   AddRoute: typeof AddRoute
   AttendanceRoute: typeof AttendanceRoute
   AuthRoute: typeof AuthRoute
+  CalendarRoute: typeof CalendarRoute
   CategoryRoute: typeof CategoryRoute
   ExportRoute: typeof ExportRoute
   FundingRoute: typeof FundingRoute
@@ -214,6 +227,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/category': {
@@ -280,6 +300,7 @@ const rootRouteChildren: RootRouteChildren = {
   AddRoute: AddRoute,
   AttendanceRoute: AttendanceRoute,
   AuthRoute: AuthRoute,
+  CalendarRoute: CalendarRoute,
   CategoryRoute: CategoryRoute,
   ExportRoute: ExportRoute,
   FundingRoute: FundingRoute,
