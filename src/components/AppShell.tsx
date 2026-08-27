@@ -14,6 +14,7 @@ const NAV = [
   { to: "/category", label: "📈 Categories" },
   { to: "/month", label: "📅 Monthly" },
   { to: "/attendance", label: "🧑‍🏭 Attendance" },
+  { to: "/calendar", label: "📆 Calendar & Salary" },
   { to: "/khatabook", label: "📒 Ledger" },
   { to: "/funding", label: "💬 Message" },
   { to: "/notes", label: "🗒️ Note Pad" },
