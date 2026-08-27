@@ -231,6 +231,39 @@ export type Database = {
         }
         Relationships: []
       }
+      work_logs: {
+        Row: {
+          close_time: string | null
+          created_at: string
+          date: string
+          id: string
+          note: string | null
+          start_time: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          close_time?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          note?: string | null
+          start_time?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          close_time?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          note?: string | null
+          start_time?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
