@@ -231,6 +231,33 @@ export type Database = {
         }
         Relationships: []
       }
+      work_days: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          updated_at: string
+          user_id: string
+          working: boolean
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          working?: boolean
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          working?: boolean
+        }
+        Relationships: []
+      }
       work_logs: {
         Row: {
           close_time: string | null
