@@ -16,6 +16,7 @@ const NAV = [
   { to: "/attendance", label: "🧑‍🏭 Attendance" },
   { to: "/khatabook", label: "📒 Ledger" },
   { to: "/funding", label: "💬 Message" },
+  { to: "/notes", label: "🗒️ Note Pad" },
   { to: "/export", label: "📥 Excel" },
   { to: "/settings", label: "⚙️ Settings" },
 ];

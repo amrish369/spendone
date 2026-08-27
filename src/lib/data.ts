@@ -28,6 +28,14 @@ export type Attendance = {
   da_amount: number;
 };
 
+export type WorkLog = {
+  id: string;
+  date: string;
+  start_time: string | null;
+  close_time: string | null;
+  note: string | null;
+};
+
 export type Category = { id: string; name: string; type: "expense" | "funding" };
 export type Customer = { id: string; name: string; phone: string | null };
 export type LedgerEntry = {
@@ -85,6 +93,16 @@ export function useAttendance(date?: string) {
       if (date) q = q.eq("date", date);
       return unwrap<Attendance[]>(q);
     },
+  });
+}
+
+export function useWorkLogs() {
+  return useQuery({
+    queryKey: ["work_logs"],
+    queryFn: () =>
+      unwrap<WorkLog[]>(
+        supabase.from("work_logs").select("*").order("date", { ascending: false }),
+      ),
   });
 }
 

@@ -19,6 +19,7 @@ import { Route as FundingRouteImport } from './routes/funding'
 import { Route as KhatabookRouteImport } from './routes/khatabook'
 import { Route as LenDenRouteImport } from './routes/len-den'
 import { Route as MonthRouteImport } from './routes/month'
+import { Route as NotesRouteImport } from './routes/notes'
 import { Route as SettingsRouteImport } from './routes/settings'
 
 const IndexRoute = IndexRouteImport.update({
@@ -71,6 +72,11 @@ const MonthRoute = MonthRouteImport.update({
   path: '/month',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotesRoute = NotesRouteImport.update({
+  id: '/notes',
+  path: '/notes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/khatabook': typeof KhatabookRoute
   '/len-den': typeof LenDenRoute
   '/month': typeof MonthRoute
+  '/notes': typeof NotesRoute
   '/settings': typeof SettingsRoute
 }
 export interface FileRoutesByTo {
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/khatabook': typeof KhatabookRoute
   '/len-den': typeof LenDenRoute
   '/month': typeof MonthRoute
+  '/notes': typeof NotesRoute
   '/settings': typeof SettingsRoute
 }
 export interface FileRoutesById {
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/khatabook': typeof KhatabookRoute
   '/len-den': typeof LenDenRoute
   '/month': typeof MonthRoute
+  '/notes': typeof NotesRoute
   '/settings': typeof SettingsRoute
 }
 export interface FileRouteTypes {
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/khatabook'
     | '/len-den'
     | '/month'
+    | '/notes'
     | '/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/khatabook'
     | '/len-den'
     | '/month'
+    | '/notes'
     | '/settings'
   id:
     | '__root__'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/khatabook'
     | '/len-den'
     | '/month'
+    | '/notes'
     | '/settings'
   fileRoutesById: FileRoutesById
 }
@@ -170,6 +182,7 @@ export interface RootRouteChildren {
   KhatabookRoute: typeof KhatabookRoute
   LenDenRoute: typeof LenDenRoute
   MonthRoute: typeof MonthRoute
+  NotesRoute: typeof NotesRoute
   SettingsRoute: typeof SettingsRoute
 }
 
@@ -245,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MonthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/notes': {
+      id: '/notes'
+      path: '/notes'
+      fullPath: '/notes'
+      preLoaderRoute: typeof NotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -266,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   KhatabookRoute: KhatabookRoute,
   LenDenRoute: LenDenRoute,
   MonthRoute: MonthRoute,
+  NotesRoute: NotesRoute,
   SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
