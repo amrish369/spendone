@@ -17,6 +17,7 @@ export type Staff = {
   name: string;
   role: string;
   da_amount: number;
+  salary: number;
   active: boolean;
 };
 

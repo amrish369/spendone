@@ -33,7 +33,9 @@ function SettingsPage() {
   const [name, setName] = useState("");
   const [role, setRole] = useState<string>("Staff");
   const [da, setDa] = useState("");
+  const [salary, setSalary] = useState("");
   const [bulkDa, setBulkDa] = useState("");
+  const [bulkSalary, setBulkSalary] = useState("");
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["staff"] });
 
@@ -45,13 +47,20 @@ function SettingsPage() {
     const user_id = await currentUserId();
     const { error } = await supabase
       .from("staff")
-      .insert({ user_id, name: name.trim(), role, da_amount: Number(da) || 0 });
+      .insert({
+        user_id,
+        name: name.trim(),
+        role,
+        da_amount: Number(da) || 0,
+        salary: Number(salary) || 0,
+      });
     if (error) {
       toast.error(error.message);
       return;
     }
     setName("");
     setDa("");
+    setSalary("");
     refresh();
     toast.success("Staff member added!");
   };
@@ -93,6 +102,25 @@ function SettingsPage() {
     setBulkDa("");
     refresh();
     toast.success("DA updated for all staff!");
+  };
+
+  const applyBulkSalary = async () => {
+    const value = Number(bulkSalary);
+    if (!value) {
+      toast.error("Enter a salary amount first!");
+      return;
+    }
+    const { error } = await supabase
+      .from("staff")
+      .update({ salary: value })
+      .neq("id", "00000000-0000-0000-0000-000000000000");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setBulkSalary("");
+    refresh();
+    toast.success("Salary updated for all staff!");
   };
 
   return (
@@ -141,9 +169,20 @@ function SettingsPage() {
             />
           </div>
         </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="ssal">Monthly salary (₹/month)</Label>
+          <Input
+            id="ssal"
+            type="number"
+            inputMode="decimal"
+            value={salary}
+            onChange={(e) => setSalary(e.target.value)}
+            placeholder="0"
+          />
+        </div>
         <p className="text-xs text-muted-foreground">
-          When you mark attendance, this amount is added automatically as an expense under "
-          {categoryForRole(role)}".
+          DA is added automatically as an expense under "{categoryForRole(role)}" when attendance is
+          marked. Salary is a separate monthly base used by the salary calculator.
         </p>
         <Button onClick={addStaff} className="w-full">
           Add staff
@@ -163,6 +202,20 @@ function SettingsPage() {
         </Button>
       </div>
 
+      <h2 className="mt-6 mb-2 text-base font-semibold">🧾 Set salary for everyone at once</h2>
+      <div className="surface flex gap-2 p-4">
+        <Input
+          type="number"
+          value={bulkSalary}
+          onChange={(e) => setBulkSalary(e.target.value)}
+          placeholder="e.g. 12000"
+        />
+        <Button variant="secondary" onClick={applyBulkSalary}>
+          Apply
+        </Button>
+      </div>
+
+
       <h2 className="mt-6 mb-2 text-base font-semibold">👥 Staff list</h2>
       <div className="space-y-3">
         {staff.length === 0 && <p className="text-sm text-muted-foreground">No staff yet.</p>}
@@ -172,7 +225,7 @@ function SettingsPage() {
               <div className="min-w-0">
                 <p className="truncate font-semibold">{s.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  Current DA {money(Number(s.da_amount))}
+                  DA {money(Number(s.da_amount))}/day · Salary {money(Number(s.salary ?? 0))}/month
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -195,6 +248,17 @@ function SettingsPage() {
                   onBlur={(e) => {
                     const v = Number(e.target.value) || 0;
                     if (v !== Number(s.da_amount)) update(s.id, { da_amount: v });
+                  }}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Monthly salary</Label>
+                <Input
+                  type="number"
+                  defaultValue={s.salary ?? 0}
+                  onBlur={(e) => {
+                    const v = Number(e.target.value) || 0;
+                    if (v !== Number(s.salary ?? 0)) update(s.id, { salary: v });
                   }}
                 />
               </div>
