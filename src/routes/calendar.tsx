@@ -104,15 +104,24 @@ function CalendarPage() {
     const rec = attByStaff.get(s.id) ?? new Map<string, string>();
     const present = workingDays.filter((d) => rec.get(d) === "present").length;
     const absent = workingDays.filter((d) => rec.get(d) === "absent").length;
-    const rate = Number(s.da_amount) || 0;
+    const monthly = Number(s.salary ?? 0) || 0;
+    const usesSalary = monthly > 0;
+    // Salary base: monthly salary split over working days. Falls back to DA/day.
+    const rate = usesSalary
+      ? workingDays.length > 0
+        ? monthly / workingDays.length
+        : 0
+      : Number(s.da_amount) || 0;
     return {
       staff: s,
       rate,
+      usesSalary,
+      monthly,
       present,
       absent,
       unmarked: workingDays.length - present - absent,
       earned: present * rate,
-      full: workingDays.length * rate,
+      full: usesSalary ? monthly : workingDays.length * rate,
     };
   });
 
@@ -203,7 +212,10 @@ function CalendarPage() {
               <div className="min-w-0">
                 <p className="truncate font-semibold">{r.staff.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {money(r.rate)}/day × {r.present} present days
+                  {r.usesSalary
+                    ? `${money(r.monthly)}/month ÷ ${workingDays.length} days = ${money(r.rate)}/day`
+                    : `${money(r.rate)}/day (DA)`}{" "}
+                  × {r.present} present days
                 </p>
               </div>
               <p className="text-lg font-bold text-primary">{money(r.earned)}</p>
