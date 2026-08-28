@@ -225,7 +225,7 @@ function SettingsPage() {
               <div className="min-w-0">
                 <p className="truncate font-semibold">{s.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  Current DA {money(Number(s.da_amount))}
+                  DA {money(Number(s.da_amount))}/day · Salary {money(Number(s.salary ?? 0))}/month
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -248,6 +248,17 @@ function SettingsPage() {
                   onBlur={(e) => {
                     const v = Number(e.target.value) || 0;
                     if (v !== Number(s.da_amount)) update(s.id, { da_amount: v });
+                  }}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Monthly salary</Label>
+                <Input
+                  type="number"
+                  defaultValue={s.salary ?? 0}
+                  onBlur={(e) => {
+                    const v = Number(e.target.value) || 0;
+                    if (v !== Number(s.salary ?? 0)) update(s.id, { salary: v });
                   }}
                 />
               </div>
