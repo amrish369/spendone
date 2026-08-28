@@ -47,13 +47,20 @@ function SettingsPage() {
     const user_id = await currentUserId();
     const { error } = await supabase
       .from("staff")
-      .insert({ user_id, name: name.trim(), role, da_amount: Number(da) || 0 });
+      .insert({
+        user_id,
+        name: name.trim(),
+        role,
+        da_amount: Number(da) || 0,
+        salary: Number(salary) || 0,
+      });
     if (error) {
       toast.error(error.message);
       return;
     }
     setName("");
     setDa("");
+    setSalary("");
     refresh();
     toast.success("Staff member added!");
   };
@@ -95,6 +102,25 @@ function SettingsPage() {
     setBulkDa("");
     refresh();
     toast.success("DA updated for all staff!");
+  };
+
+  const applyBulkSalary = async () => {
+    const value = Number(bulkSalary);
+    if (!value) {
+      toast.error("Enter a salary amount first!");
+      return;
+    }
+    const { error } = await supabase
+      .from("staff")
+      .update({ salary: value })
+      .neq("id", "00000000-0000-0000-0000-000000000000");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setBulkSalary("");
+    refresh();
+    toast.success("Salary updated for all staff!");
   };
 
   return (
