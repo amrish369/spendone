@@ -105,23 +105,25 @@ function CalendarPage() {
     const present = workingDays.filter((d) => rec.get(d) === "present").length;
     const absent = workingDays.filter((d) => rec.get(d) === "absent").length;
     const monthly = Number(s.salary ?? 0) || 0;
-    const usesSalary = monthly > 0;
-    // Salary base: monthly salary split over working days. Falls back to DA/day.
-    const rate = usesSalary
-      ? workingDays.length > 0
-        ? monthly / workingDays.length
-        : 0
-      : Number(s.da_amount) || 0;
+    const da = Number(s.da_amount) || 0;
+    const workingCount = workingDays.length;
+    // Monthly salary is split over working days (pro-rated by attendance);
+    // DA is added on top for each present day. Either can be zero.
+    const salaryPerDay = workingCount > 0 ? monthly / workingCount : 0;
+    const hasSalary = monthly > 0;
+    const hasDa = da > 0;
     return {
       staff: s,
-      rate,
-      usesSalary,
       monthly,
+      da,
+      salaryPerDay,
+      hasSalary,
+      hasDa,
       present,
       absent,
-      unmarked: workingDays.length - present - absent,
-      earned: present * rate,
-      full: usesSalary ? monthly : workingDays.length * rate,
+      unmarked: workingCount - present - absent,
+      earned: present * salaryPerDay + present * da,
+      full: monthly + workingCount * da,
     };
   });
 
@@ -212,10 +214,10 @@ function CalendarPage() {
               <div className="min-w-0">
                 <p className="truncate font-semibold">{r.staff.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {r.usesSalary
-                    ? `${money(r.monthly)}/month ÷ ${workingDays.length} days = ${money(r.rate)}/day`
-                    : `${money(r.rate)}/day (DA)`}{" "}
-                  × {r.present} present days
+                  {r.hasSalary
+                    ? `Salary ${money(r.monthly)}/mo (${money(r.salaryPerDay)}/day)`
+                    : "No monthly salary"}
+                  {r.hasDa ? ` + ${money(r.da)}/day DA` : ""} × {r.present} present
                 </p>
               </div>
               <p className="text-lg font-bold text-primary">{money(r.earned)}</p>
