@@ -169,9 +169,20 @@ function SettingsPage() {
             />
           </div>
         </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="ssal">Monthly salary (₹/month)</Label>
+          <Input
+            id="ssal"
+            type="number"
+            inputMode="decimal"
+            value={salary}
+            onChange={(e) => setSalary(e.target.value)}
+            placeholder="0"
+          />
+        </div>
         <p className="text-xs text-muted-foreground">
-          When you mark attendance, this amount is added automatically as an expense under "
-          {categoryForRole(role)}".
+          DA is added automatically as an expense under "{categoryForRole(role)}" when attendance is
+          marked. Salary is a separate monthly base used by the salary calculator.
         </p>
         <Button onClick={addStaff} className="w-full">
           Add staff
@@ -190,6 +201,20 @@ function SettingsPage() {
           Apply
         </Button>
       </div>
+
+      <h2 className="mt-6 mb-2 text-base font-semibold">🧾 Set salary for everyone at once</h2>
+      <div className="surface flex gap-2 p-4">
+        <Input
+          type="number"
+          value={bulkSalary}
+          onChange={(e) => setBulkSalary(e.target.value)}
+          placeholder="e.g. 12000"
+        />
+        <Button variant="secondary" onClick={applyBulkSalary}>
+          Apply
+        </Button>
+      </div>
+
 
       <h2 className="mt-6 mb-2 text-base font-semibold">👥 Staff list</h2>
       <div className="space-y-3">
