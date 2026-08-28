@@ -33,7 +33,9 @@ function SettingsPage() {
   const [name, setName] = useState("");
   const [role, setRole] = useState<string>("Staff");
   const [da, setDa] = useState("");
+  const [salary, setSalary] = useState("");
   const [bulkDa, setBulkDa] = useState("");
+  const [bulkSalary, setBulkSalary] = useState("");
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["staff"] });
 
