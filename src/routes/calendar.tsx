@@ -298,6 +298,66 @@ function CalendarPage() {
             Sundays off
           </Button>
         </div>
+        <div className="mt-3 border-t pt-3">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={busy}
+            onClick={() => setDay(selected, !isWorking(selected))}
+          >
+            {isWorking(selected)
+              ? `🚫 Mark ${selected.slice(-2)} as holiday`
+              : `✅ Mark ${selected.slice(-2)} as working day`}
+          </Button>
+        </div>
+      </div>
+
+      <h2 className="mt-6 mb-2 text-base font-semibold">
+        🧑‍🏭 Attendance for {selected}
+      </h2>
+      <div className="space-y-3">
+        {activeStaff.length === 0 && (
+          <p className="text-sm text-muted-foreground">Add staff in Settings first.</p>
+        )}
+        {activeStaff.map((member) => {
+          const rec = attByDate.get(selected)?.get(member.id);
+          return (
+            <div key={member.id} className="surface p-4">
+              <div className="flex items-center justify-between">
+                <p className="font-semibold">{member.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  DA {money(Number(member.da_amount))}
+                </p>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                <Button
+                  size="sm"
+                  disabled={busyId === member.id}
+                  variant={rec === "present" ? "default" : "outline"}
+                  onClick={() => mark(member, "present")}
+                >
+                  Present
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={busyId === member.id}
+                  variant={rec === "traveling" ? "secondary" : "outline"}
+                  onClick={() => mark(member, "traveling")}
+                >
+                  🚌 Traveling
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={busyId === member.id}
+                  variant={rec === "absent" ? "destructive" : "outline"}
+                  onClick={() => mark(member, "absent")}
+                >
+                  Absent
+                </Button>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <h2 className="mt-6 mb-2 text-base font-semibold">💰 Salary calculator</h2>
