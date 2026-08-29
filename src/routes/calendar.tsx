@@ -226,7 +226,7 @@ function CalendarPage() {
         <Stat label="Total salary" value={money(totalEarned)} />
       </div>
 
-      <h2 className="mt-6 mb-2 text-base font-semibold">🗓️ Tick working days</h2>
+      <h2 className="mt-6 mb-2 text-base font-semibold">🗓️ Tap a date to mark attendance</h2>
       <div className="surface p-4">
         <div className="mb-2 grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
           {WEEK.map((w) => (
@@ -239,25 +239,46 @@ function CalendarPage() {
           ))}
           {days.map((d) => {
             const on = isWorking(d);
+            const isSel = d === selected;
+            const dayAtt = attByDate.get(d);
+            const statuses = dayAtt ? new Set(dayAtt.values()) : new Set<string>();
+            const dot =
+              statuses.size === 0
+                ? null
+                : statuses.size === 1
+                  ? statuses.has("present")
+                    ? "bg-success"
+                    : statuses.has("traveling")
+                      ? "bg-primary"
+                      : "bg-destructive"
+                  : "bg-accent-foreground";
             return (
               <button
                 key={d}
-                disabled={busy}
-                onClick={() => setDay(d, !on)}
-                className={`rounded-lg py-2 text-sm font-medium transition-colors ${
-                  on
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground line-through"
+                onClick={() => setSelected(d)}
+                className={`relative rounded-lg py-2 text-sm font-medium transition-colors ${
+                  isSel
+                    ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background"
+                    : on
+                      ? "bg-secondary text-secondary-foreground hover:bg-primary/20"
+                      : "bg-muted text-muted-foreground line-through"
                 }`}
-                aria-pressed={on}
+                aria-pressed={isSel}
               >
                 {Number(d.slice(-2))}
+                {dot && (
+                  <span
+                    className={`absolute bottom-1 left-1/2 size-1.5 -translate-x-1/2 rounded-full ${dot} ${
+                      isSel ? "ring-1 ring-primary-foreground" : ""
+                    }`}
+                  />
+                )}
               </button>
             );
           })}
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
-          Tap a date to switch it between working day and holiday.
+          Tap a date to select it and mark attendance below. Dots: 🟢 present · 🔵 traveling · 🔴 absent.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Button size="sm" variant="secondary" disabled={busy} onClick={() => setMany(true)}>
