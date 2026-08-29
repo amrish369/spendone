@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell, Stat } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { useAttendance, useStaff, useWorkDays, currentUserId } from "@/lib/data";
+import { useAttendance, useStaff, useWorkDays, currentUserId, type Staff } from "@/lib/data";
 import { money, todayISO, monthKey, monthLabel } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
