@@ -89,6 +89,72 @@ function CalendarPage() {
     }
   };
 
+  // Attendance status per date -> staff_id -> status (for calendar cell colors).
+  const attByDate = useMemo(() => {
+    const map = new Map<string, Map<string, string>>();
+    attendance.forEach((a) => {
+      if (!map.has(a.date)) map.set(a.date, new Map());
+      map.get(a.date)!.set(a.staff_id, a.status);
+    });
+    return map;
+  }, [attendance]);
+
+  const mark = async (member: Staff, status: "present" | "traveling" | "absent") => {
+    setBusyId(member.id);
+    try {
+      const user_id = await currentUserId();
+      const amount = status === "absent" ? 0 : Number(member.da_amount);
+      const existing = attendance.find((a) => a.date === selected && a.staff_id === member.id);
+
+      const { data: saved, error } = await supabase
+        .from("attendance")
+        .upsert(
+          {
+            ...(existing ? { id: existing.id } : {}),
+            user_id,
+            staff_id: member.id,
+            date: selected,
+            status,
+            da_amount: amount,
+          },
+          { onConflict: "staff_id,date" },
+        )
+        .select()
+        .single();
+      if (error) throw error;
+
+      await supabase.from("transactions").delete().eq("attendance_id", saved.id);
+
+      if (status !== "absent" && amount > 0) {
+        const { error: txErr } = await supabase.from("transactions").insert({
+          user_id,
+          date: selected,
+          type: "expense",
+          category: member.name,
+          amount,
+          description: null,
+          source: "attendance",
+          attendance_id: saved.id,
+        });
+        if (txErr) throw txErr;
+      }
+
+      qc.invalidateQueries({ queryKey: ["attendance"] });
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success(
+        status === "absent"
+          ? `${member.name}: Absent`
+          : status === "traveling"
+            ? `${member.name}: Traveling • ${money(amount)} DA added`
+            : `${member.name}: ${money(amount)} DA added`,
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const attByStaff = useMemo(() => {
     const map = new Map<string, Map<string, string>>();
     attendance
