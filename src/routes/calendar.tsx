@@ -103,27 +103,35 @@ function CalendarPage() {
   const salary = activeStaff.map((s) => {
     const rec = attByStaff.get(s.id) ?? new Map<string, string>();
     const present = workingDays.filter((d) => rec.get(d) === "present").length;
+    const traveling = workingDays.filter((d) => rec.get(d) === "traveling").length;
     const absent = workingDays.filter((d) => rec.get(d) === "absent").length;
-    const monthly = Number(s.salary ?? 0) || 0;
+    // Traveling days are paid days, just like present days.
+    const paid = present + traveling;
+    const salary = Number(s.salary ?? 0) || 0;
+    const salaryType = s.salary_type === "daily" ? "daily" : "monthly";
     const da = Number(s.da_amount) || 0;
     const workingCount = workingDays.length;
     // Monthly salary is split over working days (pro-rated by attendance);
-    // DA is added on top for each present day. Either can be zero.
-    const salaryPerDay = workingCount > 0 ? monthly / workingCount : 0;
-    const hasSalary = monthly > 0;
+    // daily salary is a fixed rate per paid day. DA is added per paid day.
+    const salaryPerDay =
+      salaryType === "daily" ? salary : workingCount > 0 ? salary / workingCount : 0;
+    const hasSalary = salary > 0;
     const hasDa = da > 0;
     return {
       staff: s,
-      monthly,
+      salary,
+      salaryType,
       da,
       salaryPerDay,
       hasSalary,
       hasDa,
       present,
+      traveling,
+      paid,
       absent,
-      unmarked: workingCount - present - absent,
-      earned: present * salaryPerDay + present * da,
-      full: monthly + workingCount * da,
+      unmarked: workingCount - paid - absent,
+      earned: paid * salaryPerDay + paid * da,
+      full: salaryType === "daily" ? workingCount * salary + workingCount * da : salary + workingCount * da,
     };
   });
 
