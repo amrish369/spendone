@@ -128,8 +128,9 @@ function AttendancePage() {
         </Button>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-3">
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Present" value={String(totals.present)} tone="income" />
+        <Stat label="Traveling" value={String(totals.traveling)} />
         <Stat label="Absent" value={String(totals.absent)} />
         <Stat label="Total DA" value={money(totals.da)} tone="expense" />
       </div>
@@ -162,18 +163,22 @@ function AttendancePage() {
                 {rec && (
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      rec.status === "present"
-                        ? "bg-success/15 text-success"
-                        : "bg-destructive/15 text-destructive"
+                      rec.status === "absent"
+                        ? "bg-destructive/15 text-destructive"
+                        : rec.status === "traveling"
+                          ? "bg-primary/15 text-primary"
+                          : "bg-success/15 text-success"
                     }`}
                   >
-                    {rec.status === "present"
-                      ? `Present • ${money(Number(rec.da_amount))}`
-                      : "Absent"}
+                    {rec.status === "absent"
+                      ? "Absent"
+                      : rec.status === "traveling"
+                        ? `Traveling • ${money(Number(rec.da_amount))}`
+                        : `Present • ${money(Number(rec.da_amount))}`}
                   </span>
                 )}
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="mt-3 grid grid-cols-3 gap-2">
                 <Button
                   size="sm"
                   disabled={busyId === member.id}
@@ -181,6 +186,14 @@ function AttendancePage() {
                   onClick={() => mark(member, "present")}
                 >
                   Present
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={busyId === member.id}
+                  variant={rec?.status === "traveling" ? "secondary" : "outline"}
+                  onClick={() => mark(member, "traveling")}
+                >
+                  🚌 Traveling
                 </Button>
                 <Button
                   size="sm"
