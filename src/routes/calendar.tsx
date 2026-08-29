@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell, Stat } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { useAttendance, useStaff, useWorkDays, currentUserId } from "@/lib/data";
+import { useAttendance, useStaff, useWorkDays, currentUserId, type Staff } from "@/lib/data";
 import { money, todayISO, monthKey, monthLabel } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -43,10 +43,12 @@ function daysOfMonth(key: string) {
 function CalendarPage() {
   const qc = useQueryClient();
   const [month, setMonth] = useState(monthKey(todayISO()));
+  const [selected, setSelected] = useState(todayISO());
   const { data: staff = [] } = useStaff();
   const { data: attendance = [] } = useAttendance();
   const { data: workDays = [] } = useWorkDays();
   const [busy, setBusy] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const days = useMemo(() => daysOfMonth(month), [month]);
   const flags = useMemo(() => new Map(workDays.map((w) => [w.date, w.working])), [workDays]);
@@ -84,6 +86,72 @@ function CalendarPage() {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setBusy(false);
+    }
+  };
+
+  // Attendance status per date -> staff_id -> status (for calendar cell colors).
+  const attByDate = useMemo(() => {
+    const map = new Map<string, Map<string, string>>();
+    attendance.forEach((a) => {
+      if (!map.has(a.date)) map.set(a.date, new Map());
+      map.get(a.date)!.set(a.staff_id, a.status);
+    });
+    return map;
+  }, [attendance]);
+
+  const mark = async (member: Staff, status: "present" | "traveling" | "absent") => {
+    setBusyId(member.id);
+    try {
+      const user_id = await currentUserId();
+      const amount = status === "absent" ? 0 : Number(member.da_amount);
+      const existing = attendance.find((a) => a.date === selected && a.staff_id === member.id);
+
+      const { data: saved, error } = await supabase
+        .from("attendance")
+        .upsert(
+          {
+            ...(existing ? { id: existing.id } : {}),
+            user_id,
+            staff_id: member.id,
+            date: selected,
+            status,
+            da_amount: amount,
+          },
+          { onConflict: "staff_id,date" },
+        )
+        .select()
+        .single();
+      if (error) throw error;
+
+      await supabase.from("transactions").delete().eq("attendance_id", saved.id);
+
+      if (status !== "absent" && amount > 0) {
+        const { error: txErr } = await supabase.from("transactions").insert({
+          user_id,
+          date: selected,
+          type: "expense",
+          category: member.name,
+          amount,
+          description: null,
+          source: "attendance",
+          attendance_id: saved.id,
+        });
+        if (txErr) throw txErr;
+      }
+
+      qc.invalidateQueries({ queryKey: ["attendance"] });
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success(
+        status === "absent"
+          ? `${member.name}: Absent`
+          : status === "traveling"
+            ? `${member.name}: Traveling • ${money(amount)} DA added`
+            : `${member.name}: ${money(amount)} DA added`,
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setBusyId(null);
     }
   };
 
@@ -158,7 +226,7 @@ function CalendarPage() {
         <Stat label="Total salary" value={money(totalEarned)} />
       </div>
 
-      <h2 className="mt-6 mb-2 text-base font-semibold">🗓️ Tick working days</h2>
+      <h2 className="mt-6 mb-2 text-base font-semibold">🗓️ Tap a date to mark attendance</h2>
       <div className="surface p-4">
         <div className="mb-2 grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
           {WEEK.map((w) => (
@@ -171,25 +239,46 @@ function CalendarPage() {
           ))}
           {days.map((d) => {
             const on = isWorking(d);
+            const isSel = d === selected;
+            const dayAtt = attByDate.get(d);
+            const statuses = dayAtt ? new Set(dayAtt.values()) : new Set<string>();
+            const dot =
+              statuses.size === 0
+                ? null
+                : statuses.size === 1
+                  ? statuses.has("present")
+                    ? "bg-success"
+                    : statuses.has("traveling")
+                      ? "bg-primary"
+                      : "bg-destructive"
+                  : "bg-accent-foreground";
             return (
               <button
                 key={d}
-                disabled={busy}
-                onClick={() => setDay(d, !on)}
-                className={`rounded-lg py-2 text-sm font-medium transition-colors ${
-                  on
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground line-through"
+                onClick={() => setSelected(d)}
+                className={`relative rounded-lg py-2 text-sm font-medium transition-colors ${
+                  isSel
+                    ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background"
+                    : on
+                      ? "bg-secondary text-secondary-foreground hover:bg-primary/20"
+                      : "bg-muted text-muted-foreground line-through"
                 }`}
-                aria-pressed={on}
+                aria-pressed={isSel}
               >
                 {Number(d.slice(-2))}
+                {dot && (
+                  <span
+                    className={`absolute bottom-1 left-1/2 size-1.5 -translate-x-1/2 rounded-full ${dot} ${
+                      isSel ? "ring-1 ring-primary-foreground" : ""
+                    }`}
+                  />
+                )}
               </button>
             );
           })}
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
-          Tap a date to switch it between working day and holiday.
+          Tap a date to select it and mark attendance below. Dots: 🟢 present · 🔵 traveling · 🔴 absent.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Button size="sm" variant="secondary" disabled={busy} onClick={() => setMany(true)}>
@@ -209,6 +298,66 @@ function CalendarPage() {
             Sundays off
           </Button>
         </div>
+        <div className="mt-3 border-t pt-3">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={busy}
+            onClick={() => setDay(selected, !isWorking(selected))}
+          >
+            {isWorking(selected)
+              ? `🚫 Mark ${selected.slice(-2)} as holiday`
+              : `✅ Mark ${selected.slice(-2)} as working day`}
+          </Button>
+        </div>
+      </div>
+
+      <h2 className="mt-6 mb-2 text-base font-semibold">
+        🧑‍🏭 Attendance for {selected}
+      </h2>
+      <div className="space-y-3">
+        {activeStaff.length === 0 && (
+          <p className="text-sm text-muted-foreground">Add staff in Settings first.</p>
+        )}
+        {activeStaff.map((member) => {
+          const rec = attByDate.get(selected)?.get(member.id);
+          return (
+            <div key={member.id} className="surface p-4">
+              <div className="flex items-center justify-between">
+                <p className="font-semibold">{member.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  DA {money(Number(member.da_amount))}
+                </p>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                <Button
+                  size="sm"
+                  disabled={busyId === member.id}
+                  variant={rec === "present" ? "default" : "outline"}
+                  onClick={() => mark(member, "present")}
+                >
+                  Present
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={busyId === member.id}
+                  variant={rec === "traveling" ? "secondary" : "outline"}
+                  onClick={() => mark(member, "traveling")}
+                >
+                  🚌 Traveling
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={busyId === member.id}
+                  variant={rec === "absent" ? "destructive" : "outline"}
+                  onClick={() => mark(member, "absent")}
+                >
+                  Absent
+                </Button>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <h2 className="mt-6 mb-2 text-base font-semibold">💰 Salary calculator</h2>
