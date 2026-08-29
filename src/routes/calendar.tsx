@@ -43,10 +43,12 @@ function daysOfMonth(key: string) {
 function CalendarPage() {
   const qc = useQueryClient();
   const [month, setMonth] = useState(monthKey(todayISO()));
+  const [selected, setSelected] = useState(todayISO());
   const { data: staff = [] } = useStaff();
   const { data: attendance = [] } = useAttendance();
   const { data: workDays = [] } = useWorkDays();
   const [busy, setBusy] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const days = useMemo(() => daysOfMonth(month), [month]);
   const flags = useMemo(() => new Map(workDays.map((w) => [w.date, w.working])), [workDays]);
