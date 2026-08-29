@@ -223,15 +223,18 @@ function CalendarPage() {
                 <p className="truncate font-semibold">{r.staff.name}</p>
                 <p className="text-xs text-muted-foreground">
                   {r.hasSalary
-                    ? `Salary ${money(r.monthly)}/mo (${money(r.salaryPerDay)}/day)`
-                    : "No monthly salary"}
-                  {r.hasDa ? ` + ${money(r.da)}/day DA` : ""} × {r.present} present
+                    ? r.salaryType === "daily"
+                      ? `Salary ${money(r.salary)}/day`
+                      : `Salary ${money(r.salary)}/mo (${money(r.salaryPerDay)}/day)`
+                    : "No salary"}
+                  {r.hasDa ? ` + ${money(r.da)}/day DA` : ""} × {r.paid} paid
                 </p>
               </div>
               <p className="text-lg font-bold text-primary">{money(r.earned)}</p>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Absent {r.absent} · Not marked {r.unmarked} · Full month {money(r.full)}
+              Present {r.present} · Traveling {r.traveling} · Absent {r.absent} · Not marked{" "}
+              {r.unmarked} · Full month {money(r.full)}
             </p>
           </div>
         ))}

@@ -34,6 +34,7 @@ function SettingsPage() {
   const [role, setRole] = useState<string>("Staff");
   const [da, setDa] = useState("");
   const [salary, setSalary] = useState("");
+  const [salaryType, setSalaryType] = useState<"monthly" | "daily">("monthly");
   const [bulkDa, setBulkDa] = useState("");
   const [bulkSalary, setBulkSalary] = useState("");
 
@@ -53,6 +54,7 @@ function SettingsPage() {
         role,
         da_amount: Number(da) || 0,
         salary: Number(salary) || 0,
+        salary_type: salaryType,
       });
     if (error) {
       toast.error(error.message);
