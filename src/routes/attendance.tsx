@@ -43,7 +43,7 @@ function AttendancePage() {
     setBusyId(member.id);
     try {
       const user_id = await currentUserId();
-      const amount = status === "present" ? Number(member.da_amount) : 0;
+      const amount = status === "absent" ? 0 : Number(member.da_amount);
       const existing = byStaff.get(member.id);
 
       const { data: saved, error } = await supabase
@@ -66,7 +66,7 @@ function AttendancePage() {
       // Remove the previous DA expense and recreate it on every change
       await supabase.from("transactions").delete().eq("attendance_id", saved.id);
 
-      if (status === "present" && amount > 0) {
+      if (status !== "absent" && amount > 0) {
         const { error: txErr } = await supabase.from("transactions").insert({
           user_id,
           date,
@@ -85,7 +85,9 @@ function AttendancePage() {
       toast.success(
         status === "absent"
           ? `${member.name}: Absent`
-          : `${member.name}: ${money(amount)} DA added`,
+          : status === "traveling"
+            ? `${member.name}: Traveling • ${money(amount)} DA added`
+            : `${member.name}: ${money(amount)} DA added`,
       );
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
@@ -103,9 +105,10 @@ function AttendancePage() {
 
   const totals = useMemo(() => {
     const present = records.filter((r) => r.status === "present").length;
+    const traveling = records.filter((r) => r.status === "traveling").length;
     const absent = records.filter((r) => r.status === "absent").length;
     const da = records.reduce((s, r) => s + Number(r.da_amount), 0);
-    return { present, absent, da };
+    return { present, traveling, absent, da };
   }, [records]);
 
   return (
