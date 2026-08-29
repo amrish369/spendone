@@ -171,16 +171,32 @@ function SettingsPage() {
             />
           </div>
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="ssal">Monthly salary (₹/month)</Label>
-          <Input
-            id="ssal"
-            type="number"
-            inputMode="decimal"
-            value={salary}
-            onChange={(e) => setSalary(e.target.value)}
-            placeholder="0"
-          />
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="ssaltype">Salary type</Label>
+            <select
+              id="ssaltype"
+              value={salaryType}
+              onChange={(e) => setSalaryType(e.target.value as "monthly" | "daily")}
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="monthly">Monthly</option>
+              <option value="daily">Per day</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ssal">
+              {salaryType === "daily" ? "Salary (₹/day)" : "Salary (₹/month)"}
+            </Label>
+            <Input
+              id="ssal"
+              type="number"
+              inputMode="decimal"
+              value={salary}
+              onChange={(e) => setSalary(e.target.value)}
+              placeholder="0"
+            />
+          </div>
         </div>
         <p className="text-xs text-muted-foreground">
           DA is added automatically as an expense under "{categoryForRole(role)}" when attendance is
@@ -227,7 +243,8 @@ function SettingsPage() {
               <div className="min-w-0">
                 <p className="truncate font-semibold">{s.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  DA {money(Number(s.da_amount))}/day · Salary {money(Number(s.salary ?? 0))}/month
+                  DA {money(Number(s.da_amount))}/day · Salary {money(Number(s.salary ?? 0))}
+                  {s.salary_type === "daily" ? "/day" : "/month"}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -254,7 +271,22 @@ function SettingsPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Monthly salary</Label>
+                <Label className="text-xs">Salary type</Label>
+                <select
+                  value={s.salary_type === "daily" ? "daily" : "monthly"}
+                  onChange={(e) =>
+                    update(s.id, { salary_type: e.target.value as "monthly" | "daily" })
+                  }
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="monthly">Monthly</option>
+                  <option value="daily">Per day</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">
+                  {s.salary_type === "daily" ? "Salary (₹/day)" : "Salary (₹/month)"}
+                </Label>
                 <Input
                   type="number"
                   defaultValue={s.salary ?? 0}
