@@ -27,7 +27,7 @@ export const Route = createFileRoute("/attendance")({
   component: AttendancePage,
 });
 
-type Status = "present" | "absent";
+type Status = "present" | "traveling" | "absent";
 
 function AttendancePage() {
   const qc = useQueryClient();
