@@ -1,0 +1,1 @@
+ALTER TABLE public.staff ADD COLUMN salary_type text NOT NULL DEFAULT 'monthly';
