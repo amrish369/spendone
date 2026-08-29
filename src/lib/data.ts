@@ -18,6 +18,7 @@ export type Staff = {
   role: string;
   da_amount: number;
   salary: number;
+  salary_type: "monthly" | "daily";
   active: boolean;
 };
 
@@ -25,7 +26,7 @@ export type Attendance = {
   id: string;
   staff_id: string;
   date: string;
-  status: "present" | "half" | "absent";
+  status: "present" | "traveling" | "absent";
   da_amount: number;
 };
 

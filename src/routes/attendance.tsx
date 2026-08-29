@@ -27,7 +27,7 @@ export const Route = createFileRoute("/attendance")({
   component: AttendancePage,
 });
 
-type Status = "present" | "absent";
+type Status = "present" | "traveling" | "absent";
 
 function AttendancePage() {
   const qc = useQueryClient();
@@ -43,7 +43,7 @@ function AttendancePage() {
     setBusyId(member.id);
     try {
       const user_id = await currentUserId();
-      const amount = status === "present" ? Number(member.da_amount) : 0;
+      const amount = status === "absent" ? 0 : Number(member.da_amount);
       const existing = byStaff.get(member.id);
 
       const { data: saved, error } = await supabase
@@ -66,7 +66,7 @@ function AttendancePage() {
       // Remove the previous DA expense and recreate it on every change
       await supabase.from("transactions").delete().eq("attendance_id", saved.id);
 
-      if (status === "present" && amount > 0) {
+      if (status !== "absent" && amount > 0) {
         const { error: txErr } = await supabase.from("transactions").insert({
           user_id,
           date,
@@ -85,7 +85,9 @@ function AttendancePage() {
       toast.success(
         status === "absent"
           ? `${member.name}: Absent`
-          : `${member.name}: ${money(amount)} DA added`,
+          : status === "traveling"
+            ? `${member.name}: Traveling • ${money(amount)} DA added`
+            : `${member.name}: ${money(amount)} DA added`,
       );
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
@@ -103,9 +105,10 @@ function AttendancePage() {
 
   const totals = useMemo(() => {
     const present = records.filter((r) => r.status === "present").length;
+    const traveling = records.filter((r) => r.status === "traveling").length;
     const absent = records.filter((r) => r.status === "absent").length;
     const da = records.reduce((s, r) => s + Number(r.da_amount), 0);
-    return { present, absent, da };
+    return { present, traveling, absent, da };
   }, [records]);
 
   return (
@@ -125,8 +128,9 @@ function AttendancePage() {
         </Button>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-3">
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Present" value={String(totals.present)} tone="income" />
+        <Stat label="Traveling" value={String(totals.traveling)} />
         <Stat label="Absent" value={String(totals.absent)} />
         <Stat label="Total DA" value={money(totals.da)} tone="expense" />
       </div>
@@ -159,18 +163,22 @@ function AttendancePage() {
                 {rec && (
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      rec.status === "present"
-                        ? "bg-success/15 text-success"
-                        : "bg-destructive/15 text-destructive"
+                      rec.status === "absent"
+                        ? "bg-destructive/15 text-destructive"
+                        : rec.status === "traveling"
+                          ? "bg-primary/15 text-primary"
+                          : "bg-success/15 text-success"
                     }`}
                   >
-                    {rec.status === "present"
-                      ? `Present • ${money(Number(rec.da_amount))}`
-                      : "Absent"}
+                    {rec.status === "absent"
+                      ? "Absent"
+                      : rec.status === "traveling"
+                        ? `Traveling • ${money(Number(rec.da_amount))}`
+                        : `Present • ${money(Number(rec.da_amount))}`}
                   </span>
                 )}
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="mt-3 grid grid-cols-3 gap-2">
                 <Button
                   size="sm"
                   disabled={busyId === member.id}
@@ -178,6 +186,14 @@ function AttendancePage() {
                   onClick={() => mark(member, "present")}
                 >
                   Present
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={busyId === member.id}
+                  variant={rec?.status === "traveling" ? "secondary" : "outline"}
+                  onClick={() => mark(member, "traveling")}
+                >
+                  🚌 Traveling
                 </Button>
                 <Button
                   size="sm"
