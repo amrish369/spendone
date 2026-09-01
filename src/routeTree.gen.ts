@@ -22,6 +22,7 @@ import { Route as LenDenRouteImport } from './routes/len-den'
 import { Route as MonthRouteImport } from './routes/month'
 import { Route as NotesRouteImport } from './routes/notes'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as StaffStaffIdRouteImport } from './routes/staff.$staffId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -88,6 +89,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StaffStaffIdRoute = StaffStaffIdRouteImport.update({
+  id: '/staff/$staffId',
+  path: '/staff/$staffId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/month': typeof MonthRoute
   '/notes': typeof NotesRoute
   '/settings': typeof SettingsRoute
+  '/staff/$staffId': typeof StaffStaffIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/month': typeof MonthRoute
   '/notes': typeof NotesRoute
   '/settings': typeof SettingsRoute
+  '/staff/$staffId': typeof StaffStaffIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/month': typeof MonthRoute
   '/notes': typeof NotesRoute
   '/settings': typeof SettingsRoute
+  '/staff/$staffId': typeof StaffStaffIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/month'
     | '/notes'
     | '/settings'
+    | '/staff/$staffId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/month'
     | '/notes'
     | '/settings'
+    | '/staff/$staffId'
   id:
     | '__root__'
     | '/'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/month'
     | '/notes'
     | '/settings'
+    | '/staff/$staffId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   MonthRoute: typeof MonthRoute
   NotesRoute: typeof NotesRoute
   SettingsRoute: typeof SettingsRoute
+  StaffStaffIdRoute: typeof StaffStaffIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -292,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/staff/$staffId': {
+      id: '/staff/$staffId'
+      path: '/staff/$staffId'
+      fullPath: '/staff/$staffId'
+      preLoaderRoute: typeof StaffStaffIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -309,6 +329,7 @@ const rootRouteChildren: RootRouteChildren = {
   MonthRoute: MonthRoute,
   NotesRoute: NotesRoute,
   SettingsRoute: SettingsRoute,
+  StaffStaffIdRoute: StaffStaffIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
