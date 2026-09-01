@@ -180,7 +180,8 @@ function CalendarPage() {
     const da = Number(s.da_amount) || 0;
     const workingCount = workingDays.length;
     // Monthly salary is split over working days (pro-rated by attendance);
-    // daily salary is a fixed rate per paid day. DA is added per paid day.
+    // daily salary is a fixed rate per paid day. DA is NOT included here
+    // because it is already paid daily through attendance expenses.
     const salaryPerDay =
       salaryType === "daily" ? salary : workingCount > 0 ? salary / workingCount : 0;
     const hasSalary = salary > 0;
@@ -198,8 +199,9 @@ function CalendarPage() {
       paid,
       absent,
       unmarked: workingCount - paid - absent,
-      earned: paid * salaryPerDay + paid * da,
-      full: salaryType === "daily" ? workingCount * salary + workingCount * da : salary + workingCount * da,
+      earned: paid * salaryPerDay,
+      daPaid: paid * da,
+      full: salaryType === "daily" ? workingCount * salary : salary,
     };
   });
 
