@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -324,7 +324,13 @@ function CalendarPage() {
           return (
             <div key={member.id} className="surface p-4">
               <div className="flex items-center justify-between">
-                <p className="font-semibold">{member.name}</p>
+                <Link
+                  to="/staff/$staffId"
+                  params={{ staffId: member.id }}
+                  className="font-semibold text-primary underline-offset-2 hover:underline"
+                >
+                  {member.name} →
+                </Link>
                 <p className="text-xs text-muted-foreground">
                   DA {money(Number(member.da_amount))}
                 </p>
@@ -369,7 +375,13 @@ function CalendarPage() {
           <div key={r.staff.id} className="surface p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="truncate font-semibold">{r.staff.name}</p>
+                <Link
+                  to="/staff/$staffId"
+                  params={{ staffId: r.staff.id }}
+                  className="truncate font-semibold text-primary underline-offset-2 hover:underline"
+                >
+                  {r.staff.name} →
+                </Link>
                 <p className="text-xs text-muted-foreground">
                   {r.hasSalary
                     ? r.salaryType === "daily"
