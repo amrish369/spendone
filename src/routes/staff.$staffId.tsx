@@ -78,7 +78,9 @@ function StaffCalendarPage() {
   const workingCount = workingDays.length;
   const salaryPerDay =
     salaryType === "daily" ? salary : workingCount > 0 ? salary / workingCount : 0;
-  const earned = paid * salaryPerDay + paid * da;
+  // DA is excluded — it is already paid daily via attendance expenses.
+  const earned = paid * salaryPerDay;
+  const daPaid = paid * da;
 
   const firstWeekday = new Date(`${days[0]}T00:00:00`).getDay();
   const today = todayISO();
