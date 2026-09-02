@@ -37,8 +37,45 @@ function SettingsPage() {
   const [salaryType, setSalaryType] = useState<"monthly" | "daily">("monthly");
   const [bulkDa, setBulkDa] = useState("");
   const [bulkSalary, setBulkSalary] = useState("");
+  const [confirmWipe, setConfirmWipe] = useState(false);
+  const [wiping, setWiping] = useState(false);
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["staff"] });
+
+  const wipeAll = async () => {
+    if (!confirmWipe) {
+      setConfirmWipe(true);
+      return;
+    }
+    setWiping(true);
+    try {
+      // Delete every table's rows for this user (RLS scopes to own rows).
+      const tables = [
+        "transactions",
+        "attendance",
+        "ledger_entries",
+        "work_logs",
+        "work_days",
+        "customers",
+        "categories",
+        "staff",
+      ] as const;
+      for (const table of tables) {
+        const { error } = await supabase
+          .from(table)
+          .delete()
+          .neq("id", "00000000-0000-0000-0000-000000000000");
+        if (error) throw error;
+      }
+      qc.clear();
+      toast.success("All data cleared. Fresh start!");
+      setConfirmWipe(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setWiping(false);
+    }
+  };
 
   const addStaff = async () => {
     if (!name.trim()) {
@@ -313,6 +350,36 @@ function SettingsPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      <h2 className="mt-8 mb-2 text-base font-semibold text-destructive">⚠️ Danger zone</h2>
+      <div className="surface border-destructive/40 p-4">
+        <p className="text-sm font-semibold">Clear all data</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Permanently deletes ALL your transactions, attendance, staff, customers, ledger entries,
+          categories, work logs and calendar marks. This cannot be undone.
+        </p>
+        <Button
+          variant="destructive"
+          className="mt-3 w-full"
+          disabled={wiping}
+          onClick={wipeAll}
+        >
+          {wiping
+            ? "Clearing…"
+            : confirmWipe
+              ? "⚠️ Tap again to permanently delete everything"
+              : "🗑️ Clear all data"}
+        </Button>
+        {confirmWipe && !wiping && (
+          <Button
+            variant="ghost"
+            className="mt-2 w-full"
+            onClick={() => setConfirmWipe(false)}
+          >
+            Cancel
+          </Button>
+        )}
       </div>
     </AppShell>
   );
