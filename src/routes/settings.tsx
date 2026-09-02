@@ -86,6 +86,7 @@ function SettingsPage() {
       qc.clear();
       toast.success("All data cleared. Fresh start!");
       setConfirmWipe(false);
+      setWipePassword("");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
