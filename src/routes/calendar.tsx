@@ -390,7 +390,7 @@ function CalendarPage() {
                       ? `Salary ${money(r.salary)}/day`
                       : `Salary ${money(r.salary)}/mo (${money(r.salaryPerDay)}/day)`
                     : "No salary"}
-                  {r.hasDa ? ` + ${money(r.da)}/day DA` : ""} × {r.paid} paid
+                  {" × "}{r.paid} paid days
                 </p>
               </div>
               <p className="text-lg font-bold text-primary">{money(r.earned)}</p>
@@ -398,6 +398,7 @@ function CalendarPage() {
             <p className="mt-2 text-xs text-muted-foreground">
               Present {r.present} · Traveling {r.traveling} · Absent {r.absent} · Not marked{" "}
               {r.unmarked} · Full month {money(r.full)}
+              {r.hasDa ? ` · DA already paid: ${money(r.daPaid)}` : ""}
             </p>
           </div>
         ))}
