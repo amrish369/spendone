@@ -38,6 +38,7 @@ function SettingsPage() {
   const [bulkDa, setBulkDa] = useState("");
   const [bulkSalary, setBulkSalary] = useState("");
   const [confirmWipe, setConfirmWipe] = useState(false);
+  const [wipePassword, setWipePassword] = useState("");
   const [wiping, setWiping] = useState(false);
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["staff"] });
@@ -47,8 +48,23 @@ function SettingsPage() {
       setConfirmWipe(true);
       return;
     }
+    if (!wipePassword) {
+      toast.error("Enter your account password to continue!");
+      return;
+    }
     setWiping(true);
     try {
+      // Verify the account password before deleting anything.
+      const email = user?.email;
+      if (!email) throw new Error("Not signed in");
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password: wipePassword,
+      });
+      if (authError) {
+        toast.error("Incorrect password! Data was not deleted.");
+        return;
+      }
       // Delete every table's rows for this user (RLS scopes to own rows).
       const tables = [
         "transactions",
@@ -70,6 +86,7 @@ function SettingsPage() {
       qc.clear();
       toast.success("All data cleared. Fresh start!");
       setConfirmWipe(false);
+      setWipePassword("");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
