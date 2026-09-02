@@ -189,7 +189,7 @@ function StaffCalendarPage() {
                   ? `Salary ${money(salary)}/day`
                   : `Salary ${money(salary)}/mo (${money(salaryPerDay)}/day)`
                 : "No salary"}
-              {da > 0 ? ` + ${money(da)}/day DA` : ""} × {paid} paid days
+              {" × "}{paid} paid days
             </p>
           </div>
           <p className="text-lg font-bold text-primary">{money(earned)}</p>
@@ -197,6 +197,7 @@ function StaffCalendarPage() {
         <p className="mt-2 text-xs text-muted-foreground">
           Present {present} · Traveling {traveling} · Absent {absent} · Not marked{" "}
           {workingCount - paid - absent}
+          {da > 0 ? ` · DA already paid: ${money(daPaid)}` : ""}
         </p>
       </div>
     </AppShell>
