@@ -376,23 +376,42 @@ function SettingsPage() {
           Permanently deletes ALL your transactions, attendance, staff, customers, ledger entries,
           categories, work logs and calendar marks. This cannot be undone.
         </p>
+        {confirmWipe && (
+          <div className="mt-3 space-y-1.5">
+            <Label htmlFor="wipe-password">Account password</Label>
+            <Input
+              id="wipe-password"
+              type="password"
+              autoComplete="current-password"
+              value={wipePassword}
+              onChange={(e) => setWipePassword(e.target.value)}
+              placeholder="Enter your login password"
+            />
+            <p className="text-xs text-muted-foreground">
+              Your password is verified before anything is deleted.
+            </p>
+          </div>
+        )}
         <Button
           variant="destructive"
           className="mt-3 w-full"
-          disabled={wiping}
+          disabled={wiping || (confirmWipe && !wipePassword)}
           onClick={wipeAll}
         >
           {wiping
-            ? "Clearing…"
+            ? "Verifying & clearing…"
             : confirmWipe
-              ? "⚠️ Tap again to permanently delete everything"
+              ? "⚠️ Confirm & permanently delete everything"
               : "🗑️ Clear all data"}
         </Button>
         {confirmWipe && !wiping && (
           <Button
             variant="ghost"
             className="mt-2 w-full"
-            onClick={() => setConfirmWipe(false)}
+            onClick={() => {
+              setConfirmWipe(false);
+              setWipePassword("");
+            }}
           >
             Cancel
           </Button>
