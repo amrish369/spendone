@@ -38,3 +38,37 @@ export const monthLabel = (key: string) => {
   ];
   return `${names[Number(m) - 1] ?? m} ${y}`;
 };
+
+const SHORT_MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+/** "1 Feb", "2 Mar 2026" — full month only if needed. */
+export const prettyDate = (iso: string) => {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-");
+  return `${Number(d)} ${SHORT_MONTHS[Number(m) - 1] ?? m}${y ? ` ${y}` : ""}`;
+};
+
+/** "1 Feb to 2 Mar" — same year/month dropped on the start. */
+export const prettyRange = (from: string, to: string) => {
+  if (!from || !to) return "";
+  const [fy, fm, fd] = from.split("-");
+  const [ty, tm, td] = to.split("-");
+  const startMonth = SHORT_MONTHS[Number(fm) - 1] ?? fm;
+  const endMonth = SHORT_MONTHS[Number(tm) - 1] ?? tm;
+  const start = `${Number(fd)} ${startMonth}${fy === ty && fm === tm ? "" : fy === ty ? "" : ` ${fy}`}`;
+  const end = `${Number(td)} ${endMonth}${ty ? ` ${ty}` : ""}`;
+  return `${start} to ${end}`;
+};
