@@ -82,6 +82,53 @@ function StaffCalendarPage() {
   const earned = paid * salaryPerDay;
   const daPaid = paid * da;
 
+  // ── All-time & per-month detailed report ──────────────────────────────
+  const report = useMemo(() => {
+    // working-day count per month (across all flagged dates; default working)
+    const workingPerMonth = new Map<string, number>();
+    flags.forEach((working, date) => {
+      const key = date.slice(0, 7);
+      if (working) workingPerMonth.set(key, (workingPerMonth.get(key) ?? 0) + 1);
+    });
+    const months = new Map<
+      string,
+      { present: number; traveling: number; absent: number; da: number; salary: number }
+    >();
+    let totalPaid = 0,
+      totalAbsent = 0,
+      totalDa = 0,
+      totalSalary = 0;
+    const myRows = attendance
+      .filter((a) => a.staff_id === staffId)
+      .sort((a, b) => a.date.localeCompare(b.date));
+    const firstDate = myRows[0]?.date ?? null;
+    const lastDate = myRows[myRows.length - 1]?.date ?? null;
+    for (const a of myRows) {
+      const key = a.date.slice(0, 7);
+      const m =
+        months.get(key) ?? { present: 0, traveling: 0, absent: 0, da: 0, salary: 0 };
+      if (a.status === "present") m.present++;
+      else if (a.status === "traveling") m.traveling++;
+      else if (a.status === "absent") m.absent++;
+      months.set(key, m);
+    }
+    months.forEach((m, key) => {
+      const paidDays = m.present + m.traveling;
+      const wc = workingPerMonth.get(key) ?? 0;
+      const perDay = salaryType === "daily" ? salary : wc > 0 ? salary / wc : 0;
+      m.salary = paidDays * perDay;
+      m.da = paidDays * da;
+      totalPaid += paidDays;
+      totalAbsent += m.absent;
+      totalDa += m.da;
+      totalSalary += m.salary;
+    });
+    const rows = Array.from(months.entries())
+      .map(([key, m]) => ({ key, ...m, paidDays: m.present + m.traveling }))
+      .sort((a, b) => b.key.localeCompare(a.key));
+    return { rows, firstDate, lastDate, totalPaid, totalAbsent, totalDa, totalSalary };
+  }, [attendance, staffId, flags, salary, salaryType, da]);
+
   const firstWeekday = new Date(`${days[0]}T00:00:00`).getDay();
   const today = todayISO();
 
