@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AppShell, Stat } from "@/components/AppShell";
 import { useAttendance, useStaff, useWorkDays } from "@/lib/data";
-import { money, todayISO, monthKey, monthLabel } from "@/lib/format";
+import { money, todayISO, monthKey, monthLabel, prettyRange } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/staff/$staffId")({
