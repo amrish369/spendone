@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { useTransactions } from "@/lib/data";
@@ -28,8 +28,26 @@ function FundingPage() {
   const [from, setFrom] = useState(todayISO());
   const [to, setTo] = useState(todayISO());
   const [pending, setPending] = useState("");
+  const [autoPending, setAutoPending] = useState(true);
   const [message, setMessage] = useState("");
   const [noData, setNoData] = useState(false);
+
+  const carryForward = useMemo(() => {
+    if (!from) return 0;
+    const before = txns.filter((t) => t.date < from);
+    const fundingBefore = before
+      .filter((t) => t.type === "funding")
+      .reduce((s, t) => s + Number(t.amount), 0);
+    const expenseBefore = before
+      .filter((t) => t.type === "expense")
+      .reduce((s, t) => s + Number(t.amount), 0);
+    return fundingBefore - expenseBefore;
+  }, [txns, from]);
+
+  useEffect(() => {
+    if (!autoPending) return;
+    setPending(String(carryForward));
+  }, [carryForward, autoPending]);
 
   const generate = () => {
     if (!from || !to) {
@@ -41,20 +59,22 @@ function FundingPage() {
       return;
     }
     const filtered = txns.filter((t) => t.date >= from && t.date <= to);
+    const expenses = filtered.filter((t) => t.type === "expense");
+    const fundings = filtered.filter((t) => t.type === "funding");
     if (filtered.length === 0) {
       setMessage("");
       setNoData(true);
       return;
     }
 
-    const grouped = new Map<string, typeof filtered>();
-    filtered.forEach((t) => {
+    const grouped = new Map<string, typeof expenses>();
+    expenses.forEach((t) => {
       const list = grouped.get(t.date) ?? [];
       list.push(t);
       grouped.set(t.date, list);
     });
 
-    let out = "";
+    let out = `Expense report\n${shortDate(from)} to ${shortDate(to)}\n\n`;
     [...grouped.keys()].sort().forEach((date) => {
       out += `${shortDate(date)}\n`;
       const day = grouped.get(date)!;
@@ -66,13 +86,15 @@ function FundingPage() {
       out += `Day Total = ${day.reduce((s, t) => s + Number(t.amount), 0)}\n\n`;
     });
 
-    const grand = filtered.reduce((s, t) => s + Number(t.amount), 0);
-    out += `Grand Total = ${grand}\n`;
-    const pend = parseFloat(pending) || 0;
-    const total = pend + grand;
-    if (pend > 0 || total > 0) {
-      out += `Pending = ${pend}\nTotal = ${total}\n`;
-    }
+    const grand = expenses.reduce((s, t) => s + Number(t.amount), 0);
+    const fundingTotal = fundings.reduce((s, t) => s + Number(t.amount), 0);
+    const opening = parseFloat(pending) || 0;
+
+    out += `Total Expense = ${grand}\n`;
+    if (fundingTotal > 0) out += `Funding received = ${fundingTotal}\n`;
+    out += `Previous balance = ${opening}\n`;
+    out += `Balance remaining = ${opening + fundingTotal - grand}\n`;
+
     setMessage(out);
     setNoData(false);
   };
@@ -92,14 +114,34 @@ function FundingPage() {
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="pending">Pending amount (₹)</Label>
+          <Label htmlFor="pending">Previous balance (₹)</Label>
           <Input
             id="pending"
             type="number"
             value={pending}
-            onChange={(e) => setPending(e.target.value)}
+            onChange={(e) => {
+              setAutoPending(false);
+              setPending(e.target.value);
+            }}
             placeholder="0"
           />
+          <p className="text-xs text-muted-foreground">
+            {autoPending
+              ? `Auto-filled from all funding minus expenses before ${from || "the start date"}.`
+              : "Manually edited."}
+            {!autoPending && (
+              <button
+                type="button"
+                className="ml-2 underline"
+                onClick={() => {
+                  setAutoPending(true);
+                  setPending(String(carryForward));
+                }}
+              >
+                Use auto value
+              </button>
+            )}
+          </p>
         </div>
         <Button className="w-full" onClick={generate}>
           Generate message
