@@ -91,8 +91,6 @@ function FundingPage() {
     const opening = parseFloat(pending) || 0;
 
     out += `Total Expense = ${grand}\n`;
-    if (fundingTotal > 0) out += `Funding received = ${fundingTotal}\n`;
-    out += `Previous balance = ${opening}\n`;
     out += `Balance remaining = ${opening + fundingTotal - grand}\n`;
 
     setMessage(out);
