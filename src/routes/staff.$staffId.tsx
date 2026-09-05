@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AppShell, Stat } from "@/components/AppShell";
 import { useAttendance, useStaff, useWorkDays } from "@/lib/data";
-import { money, todayISO, monthKey, monthLabel } from "@/lib/format";
+import { money, todayISO, monthKey, monthLabel, prettyRange } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/staff/$staffId")({
@@ -252,8 +252,8 @@ function StaffCalendarPage() {
       <h2 className="mt-6 mb-2 text-base font-semibold">📊 Overall report</h2>
       <div className="surface p-4">
         <p className="text-sm text-muted-foreground">
-          {report.firstDate
-            ? `Working from ${report.firstDate} to ${report.lastDate}`
+          {report.firstDate && report.lastDate
+            ? `Working from ${prettyRange(report.firstDate, report.lastDate)}`
             : "No attendance recorded yet"}
         </p>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
