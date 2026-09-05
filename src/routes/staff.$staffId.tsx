@@ -252,7 +252,7 @@ function StaffCalendarPage() {
       <h2 className="mt-6 mb-2 text-base font-semibold">📊 Overall report</h2>
       <div className="surface p-4">
         <p className="text-sm text-muted-foreground">
-          {report.firstDate
+          {report.firstDate && report.lastDate
             ? `Working from ${prettyRange(report.firstDate, report.lastDate)}`
             : "No attendance recorded yet"}
         </p>
