@@ -247,6 +247,60 @@ function StaffCalendarPage() {
           {da > 0 ? ` · DA already paid: ${money(daPaid)}` : ""}
         </p>
       </div>
+
+      <h2 className="mt-6 mb-2 text-base font-semibold">📊 Overall report</h2>
+      <div className="surface p-4">
+        <p className="text-sm text-muted-foreground">
+          {report.firstDate
+            ? `Working from ${report.firstDate} to ${report.lastDate}`
+            : "No attendance recorded yet"}
+        </p>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div>
+            <p className="text-xs text-muted-foreground">Days worked</p>
+            <p className="text-lg font-bold text-success">{report.totalPaid}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Days absent</p>
+            <p className="text-lg font-bold text-destructive">{report.totalAbsent}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Total DA paid</p>
+            <p className="text-lg font-bold text-primary">{money(report.totalDa)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Total salary earned</p>
+            <p className="text-lg font-bold">{money(report.totalSalary)}</p>
+          </div>
+        </div>
+      </div>
+
+      <h2 className="mt-6 mb-2 text-base font-semibold">🗓️ Month by month</h2>
+      <div className="space-y-2">
+        {report.rows.length === 0 && (
+          <div className="surface p-4 text-sm text-muted-foreground">
+            No attendance history yet.
+          </div>
+        )}
+        {report.rows.map((r) => (
+          <button
+            key={r.key}
+            type="button"
+            onClick={() => setMonth(r.key)}
+            className="surface block w-full p-4 text-left"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-semibold">{monthLabel(r.key)}</p>
+              <p className="font-bold text-primary">{money(r.salary)}</p>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Worked {r.paidDays} days (Present {r.present} · Traveling {r.traveling}) ·
+              Absent {r.absent}
+              {da > 0 ? ` · DA paid ${money(r.da)}` : ""}
+            </p>
+          </button>
+        ))}
+      </div>
     </AppShell>
   );
 }
