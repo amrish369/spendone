@@ -253,7 +253,7 @@ function StaffCalendarPage() {
       <div className="surface p-4">
         <p className="text-sm text-muted-foreground">
           {report.firstDate
-            ? `Working from ${report.firstDate} to ${report.lastDate}`
+            ? `Working from ${prettyRange(report.firstDate, report.lastDate)}`
             : "No attendance recorded yet"}
         </p>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
