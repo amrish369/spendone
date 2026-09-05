@@ -82,6 +82,54 @@ function StaffCalendarPage() {
   const earned = paid * salaryPerDay;
   const daPaid = paid * da;
 
+  // ── All-time & per-month detailed report ──────────────────────────────
+  const report = useMemo(() => {
+    // working-day count per month (across all flagged dates; default working)
+    const workingPerMonth = new Map<string, number>();
+    flags.forEach((working, date) => {
+      const key = date.slice(0, 7);
+      if (working) workingPerMonth.set(key, (workingPerMonth.get(key) ?? 0) + 1);
+    });
+    const months = new Map<
+      string,
+      { present: number; traveling: number; absent: number; da: number; salary: number }
+    >();
+    let totalPaid = 0,
+      totalAbsent = 0,
+      totalDa = 0,
+      totalSalary = 0;
+    const myRows = attendance
+      .filter((a) => a.staff_id === staffId)
+      .sort((a, b) => a.date.localeCompare(b.date));
+    const firstDate = myRows[0]?.date ?? null;
+    const lastDate = myRows[myRows.length - 1]?.date ?? null;
+    for (const a of myRows) {
+      const key = a.date.slice(0, 7);
+      const m =
+        months.get(key) ?? { present: 0, traveling: 0, absent: 0, da: 0, salary: 0 };
+      if (a.status === "present") m.present++;
+      else if (a.status === "traveling") m.traveling++;
+      else if (a.status === "absent") m.absent++;
+      months.set(key, m);
+    }
+    months.forEach((m, key) => {
+      const paidDays = m.present + m.traveling;
+      // If no calendar flags exist for that month, treat every day as working.
+      const wc = workingPerMonth.get(key) ?? daysOfMonth(key).length;
+      const perDay = salaryType === "daily" ? salary : wc > 0 ? salary / wc : 0;
+      m.salary = paidDays * perDay;
+      m.da = paidDays * da;
+      totalPaid += paidDays;
+      totalAbsent += m.absent;
+      totalDa += m.da;
+      totalSalary += m.salary;
+    });
+    const rows = Array.from(months.entries())
+      .map(([key, m]) => ({ key, ...m, paidDays: m.present + m.traveling }))
+      .sort((a, b) => b.key.localeCompare(a.key));
+    return { rows, firstDate, lastDate, totalPaid, totalAbsent, totalDa, totalSalary };
+  }, [attendance, staffId, flags, salary, salaryType, da]);
+
   const firstWeekday = new Date(`${days[0]}T00:00:00`).getDay();
   const today = todayISO();
 
@@ -199,6 +247,60 @@ function StaffCalendarPage() {
           {workingCount - paid - absent}
           {da > 0 ? ` · DA already paid: ${money(daPaid)}` : ""}
         </p>
+      </div>
+
+      <h2 className="mt-6 mb-2 text-base font-semibold">📊 Overall report</h2>
+      <div className="surface p-4">
+        <p className="text-sm text-muted-foreground">
+          {report.firstDate
+            ? `Working from ${report.firstDate} to ${report.lastDate}`
+            : "No attendance recorded yet"}
+        </p>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div>
+            <p className="text-xs text-muted-foreground">Days worked</p>
+            <p className="text-lg font-bold text-success">{report.totalPaid}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Days absent</p>
+            <p className="text-lg font-bold text-destructive">{report.totalAbsent}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Total DA paid</p>
+            <p className="text-lg font-bold text-primary">{money(report.totalDa)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Total salary earned</p>
+            <p className="text-lg font-bold">{money(report.totalSalary)}</p>
+          </div>
+        </div>
+      </div>
+
+      <h2 className="mt-6 mb-2 text-base font-semibold">🗓️ Month by month</h2>
+      <div className="space-y-2">
+        {report.rows.length === 0 && (
+          <div className="surface p-4 text-sm text-muted-foreground">
+            No attendance history yet.
+          </div>
+        )}
+        {report.rows.map((r) => (
+          <button
+            key={r.key}
+            type="button"
+            onClick={() => setMonth(r.key)}
+            className="surface block w-full p-4 text-left"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-semibold">{monthLabel(r.key)}</p>
+              <p className="font-bold text-primary">{money(r.salary)}</p>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Worked {r.paidDays} days (Present {r.present} · Traveling {r.traveling}) ·
+              Absent {r.absent}
+              {da > 0 ? ` · DA paid ${money(r.da)}` : ""}
+            </p>
+          </button>
+        ))}
       </div>
     </AppShell>
   );
