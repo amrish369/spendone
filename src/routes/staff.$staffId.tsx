@@ -114,7 +114,8 @@ function StaffCalendarPage() {
     }
     months.forEach((m, key) => {
       const paidDays = m.present + m.traveling;
-      const wc = workingPerMonth.get(key) ?? 0;
+      // If no calendar flags exist for that month, treat every day as working.
+      const wc = workingPerMonth.get(key) ?? daysOfMonth(key).length;
       const perDay = salaryType === "daily" ? salary : wc > 0 ? salary / wc : 0;
       m.salary = paidDays * perDay;
       m.da = paidDays * da;
