@@ -88,12 +88,11 @@ function FundingPage() {
     });
 
     const grand = expenses.reduce((s, t) => s + Number(t.amount), 0);
-    const fundingTotal = fundings.reduce((s, t) => s + Number(t.amount), 0);
     const opening = parseFloat(pending) || 0;
-    const total = opening + fundingTotal + grand;
+    const total = grand + opening;
 
     out += `Grand Total = ${num(grand)}\n`;
-    out += `Pending = ${num(opening + fundingTotal)}\n`;
+    out += `Pending = ${num(opening)}\n`;
     out += `Total = ${num(total)}\n`;
 
     setMessage(out);
