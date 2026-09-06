@@ -79,19 +79,20 @@ function FundingPage() {
       out += `${shortDate(date)}\n`;
       const day = grouped.get(date)!;
       day.forEach((t) => {
-        let line = `${cleanCategory(t.category)} = ${Number(t.amount)}`;
+        let line = `${cleanCategory(t.category)} = ${money(Number(t.amount))}`;
         if (t.description?.trim()) line += ` (${t.description.trim()})`;
         out += line + "\n";
       });
-      out += `Day Total = ${day.reduce((s, t) => s + Number(t.amount), 0)}\n\n`;
+      out += `Day Total = ${money(day.reduce((s, t) => s + Number(t.amount), 0))}\n\n`;
     });
 
     const grand = expenses.reduce((s, t) => s + Number(t.amount), 0);
     const fundingTotal = fundings.reduce((s, t) => s + Number(t.amount), 0);
     const opening = parseFloat(pending) || 0;
+    const remaining = opening + fundingTotal - grand;
 
-    out += `Total Expense = ${grand}\n`;
-    out += `Balance remaining = ${opening + fundingTotal - grand}\n`;
+    out += `Total Expense = ${money(grand)}\n`;
+    out += `Balance remaining = ${money(remaining)}\n`;
 
     setMessage(out);
     setNoData(false);
