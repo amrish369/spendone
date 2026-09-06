@@ -74,25 +74,27 @@ function FundingPage() {
       grouped.set(t.date, list);
     });
 
-    let out = `Expense report\n${shortDate(from)} to ${shortDate(to)}\n\n`;
-    [...grouped.keys()].sort().forEach((date) => {
-      out += `${shortDate(date)}\n`;
+    const num = (n: number) => (Number(n) || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+
+    let out = "";
+    const dates = [...grouped.keys()].sort();
+    dates.forEach((date) => {
+      out += `${shortDate(date)}\n\n`;
       const day = grouped.get(date)!;
       day.forEach((t) => {
-        let line = `${cleanCategory(t.category)} = ${money(Number(t.amount))}`;
-        if (t.description?.trim()) line += ` (${t.description.trim()})`;
-        out += line + "\n";
+        out += `${cleanCategory(t.category)} = ${num(Number(t.amount))}\n`;
       });
-      out += `Day Total = ${money(day.reduce((s, t) => s + Number(t.amount), 0))}\n\n`;
+      out += `Day Total = ${num(day.reduce((s, t) => s + Number(t.amount), 0))}\n\n`;
     });
 
     const grand = expenses.reduce((s, t) => s + Number(t.amount), 0);
     const fundingTotal = fundings.reduce((s, t) => s + Number(t.amount), 0);
     const opening = parseFloat(pending) || 0;
-    const remaining = opening + fundingTotal - grand;
+    const total = opening + fundingTotal + grand;
 
-    out += `Total Expense = ${money(grand)}\n`;
-    out += `Balance remaining = ${money(remaining)}\n`;
+    out += `Grand Total = ${num(grand)}\n`;
+    out += `Pending = ${num(opening + fundingTotal)}\n`;
+    out += `Total = ${num(total)}\n`;
 
     setMessage(out);
     setNoData(false);
