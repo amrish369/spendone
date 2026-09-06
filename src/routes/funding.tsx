@@ -34,14 +34,11 @@ function FundingPage() {
 
   const carryForward = useMemo(() => {
     if (!from) return 0;
-    const before = txns.filter((t) => t.date < from);
-    const fundingBefore = before
-      .filter((t) => t.type === "funding")
+    // Running total of expenses before the start date — expenses are added,
+    // never subtracted. This becomes the "Pending" carried into the message.
+    return txns
+      .filter((t) => t.date < from && t.type === "expense")
       .reduce((s, t) => s + Number(t.amount), 0);
-    const expenseBefore = before
-      .filter((t) => t.type === "expense")
-      .reduce((s, t) => s + Number(t.amount), 0);
-    return fundingBefore - expenseBefore;
   }, [txns, from]);
 
   useEffect(() => {
@@ -113,7 +110,7 @@ function FundingPage() {
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="pending">Previous balance (₹)</Label>
+          <Label htmlFor="pending">Previous total (₹)</Label>
           <Input
             id="pending"
             type="number"
@@ -126,7 +123,7 @@ function FundingPage() {
           />
           <p className="text-xs text-muted-foreground">
             {autoPending
-              ? `Auto-filled from all funding minus expenses before ${from || "the start date"}.`
+              ? `Auto-filled from total expenses before ${from || "the start date"}.`
               : "Manually edited."}
             {!autoPending && (
               <button
