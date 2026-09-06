@@ -110,7 +110,7 @@ function FundingPage() {
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="pending">Previous total (₹)</Label>
+          <Label htmlFor="pending">Pending (₹)</Label>
           <Input
             id="pending"
             type="number"
