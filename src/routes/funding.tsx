@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { useTransactions } from "@/lib/data";
-import { cleanCategory, shortDate, todayISO, money } from "@/lib/format";
+import { cleanCategory, shortDate, todayISO } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
