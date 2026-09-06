@@ -34,14 +34,11 @@ function FundingPage() {
 
   const carryForward = useMemo(() => {
     if (!from) return 0;
-    const before = txns.filter((t) => t.date < from);
-    const fundingBefore = before
-      .filter((t) => t.type === "funding")
+    // Running total of expenses before the start date — expenses are added,
+    // never subtracted. This becomes the "Pending" carried into the message.
+    return txns
+      .filter((t) => t.date < from && t.type === "expense")
       .reduce((s, t) => s + Number(t.amount), 0);
-    const expenseBefore = before
-      .filter((t) => t.type === "expense")
-      .reduce((s, t) => s + Number(t.amount), 0);
-    return fundingBefore - expenseBefore;
   }, [txns, from]);
 
   useEffect(() => {
