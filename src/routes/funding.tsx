@@ -110,7 +110,7 @@ function FundingPage() {
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="pending">Previous balance (₹)</Label>
+          <Label htmlFor="pending">Previous total (₹)</Label>
           <Input
             id="pending"
             type="number"
@@ -123,7 +123,7 @@ function FundingPage() {
           />
           <p className="text-xs text-muted-foreground">
             {autoPending
-              ? `Auto-filled from all funding minus expenses before ${from || "the start date"}.`
+              ? `Auto-filled from total expenses before ${from || "the start date"}.`
               : "Manually edited."}
             {!autoPending && (
               <button
