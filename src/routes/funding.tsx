@@ -60,7 +60,6 @@ function FundingPage() {
     }
     const filtered = txns.filter((t) => t.date >= from && t.date <= to);
     const expenses = filtered.filter((t) => t.type === "expense");
-    const fundings = filtered.filter((t) => t.type === "funding");
     if (filtered.length === 0) {
       setMessage("");
       setNoData(true);
