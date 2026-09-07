@@ -128,7 +128,7 @@ function FundingPage() {
           />
           <p className="text-xs text-muted-foreground">
             {autoPending
-              ? `Auto-filled from total expenses before ${from || "the start date"}.`
+              ? `Auto-filled: funding − expenses before ${from || "the start date"}.`
               : "Manually edited."}
             {!autoPending && (
               <button
