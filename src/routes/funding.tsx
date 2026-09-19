@@ -131,6 +131,22 @@ function FundingPage() {
           </div>
         </div>
         <div className="space-y-1.5">
+          <Label htmlFor="realFunding">Real funding received (₹)</Label>
+          <Input
+            id="realFunding"
+            type="number"
+            value={realFunding}
+            onChange={(e) => {
+              setRealFunding(e.target.value);
+              setAutoPending(true);
+            }}
+            placeholder={`Auto: ${fundingBefore.toLocaleString("en-IN")}`}
+          />
+          <p className="text-xs text-muted-foreground">
+            Agar asli funding alag hai to yahan bharein — Pending automatically isi se calculate hoga. Khali chhodne par recorded funding use hogi.
+          </p>
+        </div>
+        <div className="space-y-1.5">
           <Label htmlFor="pending">Pending (₹)</Label>
           <Input
             id="pending"
