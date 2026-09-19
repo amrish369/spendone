@@ -29,13 +29,12 @@ function FundingPage() {
   const [to, setTo] = useState(todayISO());
   const [pending, setPending] = useState("");
   const [autoPending, setAutoPending] = useState(true);
+  const [realFunding, setRealFunding] = useState("");
   const [message, setMessage] = useState("");
   const [noData, setNoData] = useState(false);
 
-  const carryForward = useMemo(() => {
-    if (!from) return 0;
-    // Pending = total funding received before the start date minus total
-    // expenses before the start date (funding − expenses).
+  const { fundingBefore, expenseBefore } = useMemo(() => {
+    if (!from) return { fundingBefore: 0, expenseBefore: 0 };
     const before = txns.filter((t) => t.date < from);
     const funding = before
       .filter((t) => t.type === "funding")
@@ -43,8 +42,16 @@ function FundingPage() {
     const expense = before
       .filter((t) => t.type === "expense")
       .reduce((s, t) => s + Number(t.amount), 0);
-    return funding - expense;
+    return { fundingBefore: funding, expenseBefore: expense };
   }, [txns, from]);
+
+  // Pending = funding − expenses before the start date. When the user enters
+  // the real funding amount, that replaces the recorded funding total.
+  const carryForward = useMemo(() => {
+    const real = parseFloat(realFunding);
+    const funding = Number.isFinite(real) && realFunding.trim() !== "" ? real : fundingBefore;
+    return funding - expenseBefore;
+  }, [realFunding, fundingBefore, expenseBefore]);
 
   useEffect(() => {
     if (!autoPending) return;
@@ -122,6 +129,22 @@ function FundingPage() {
             <Label htmlFor="to">To</Label>
             <Input id="to" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="realFunding">Real funding received (₹)</Label>
+          <Input
+            id="realFunding"
+            type="number"
+            value={realFunding}
+            onChange={(e) => {
+              setRealFunding(e.target.value);
+              setAutoPending(true);
+            }}
+            placeholder={`Auto: ${fundingBefore.toLocaleString("en-IN")}`}
+          />
+          <p className="text-xs text-muted-foreground">
+            Agar asli funding alag hai to yahan bharein — Pending automatically isi se calculate hoga. Khali chhodne par recorded funding use hogi.
+          </p>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="pending">Pending (₹)</Label>
