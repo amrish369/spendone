@@ -77,13 +77,22 @@ function FundingPage() {
 
     const num = (n: number) => (Number(n) || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
 
+    // Categories where the transaction description (note) should appear in the message.
+    const DESC_CATEGORIES = ["Auto", "Bus", "Train", "Photo Copy"];
+
+    const lineLabel = (t: (typeof expenses)[number]) => {
+      const name = cleanCategory(t.category);
+      const note = (t.description ?? "").trim();
+      return DESC_CATEGORIES.includes(name) && note ? `${name} (${note})` : name;
+    };
+
     let out = "";
     const dates = [...grouped.keys()].sort();
     dates.forEach((date) => {
       out += `${shortDate(date)}\n\n`;
       const day = grouped.get(date)!;
       day.forEach((t) => {
-        out += `${cleanCategory(t.category)} = ${num(Number(t.amount))}\n`;
+        out += `${lineLabel(t)} = ${num(Number(t.amount))}\n`;
       });
       out += `Day Total = ${num(day.reduce((s, t) => s + Number(t.amount), 0))}\n\n`;
     });
