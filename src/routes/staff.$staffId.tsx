@@ -236,7 +236,11 @@ function StaffCalendarPage() {
         <Input
           type="month"
           value={month}
-          onChange={(e) => setMonth(e.target.value || month)}
+          onChange={(e) => {
+            const next = e.target.value || month;
+            setMonth(next);
+            setSelected(monthKey(todayISO()) === next ? todayISO() : `${next}-01`);
+          }}
           className="max-w-44"
         />
         <span className="text-sm text-muted-foreground">{monthLabel(month)}</span>
