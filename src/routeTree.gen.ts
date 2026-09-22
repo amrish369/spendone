@@ -21,6 +21,7 @@ import { Route as KhatabookRouteImport } from './routes/khatabook'
 import { Route as LenDenRouteImport } from './routes/len-den'
 import { Route as MonthRouteImport } from './routes/month'
 import { Route as NotesRouteImport } from './routes/notes'
+import { Route as SalaryMessageRouteImport } from './routes/salary-message'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StaffStaffIdRouteImport } from './routes/staff.$staffId'
 
@@ -84,6 +85,11 @@ const NotesRoute = NotesRouteImport.update({
   path: '/notes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SalaryMessageRoute = SalaryMessageRouteImport.update({
+  id: '/salary-message',
+  path: '/salary-message',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/len-den': typeof LenDenRoute
   '/month': typeof MonthRoute
   '/notes': typeof NotesRoute
+  '/salary-message': typeof SalaryMessageRoute
   '/settings': typeof SettingsRoute
   '/staff/$staffId': typeof StaffStaffIdRoute
 }
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/len-den': typeof LenDenRoute
   '/month': typeof MonthRoute
   '/notes': typeof NotesRoute
+  '/salary-message': typeof SalaryMessageRoute
   '/settings': typeof SettingsRoute
   '/staff/$staffId': typeof StaffStaffIdRoute
 }
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/len-den': typeof LenDenRoute
   '/month': typeof MonthRoute
   '/notes': typeof NotesRoute
+  '/salary-message': typeof SalaryMessageRoute
   '/settings': typeof SettingsRoute
   '/staff/$staffId': typeof StaffStaffIdRoute
 }
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/len-den'
     | '/month'
     | '/notes'
+    | '/salary-message'
     | '/settings'
     | '/staff/$staffId'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
     | '/len-den'
     | '/month'
     | '/notes'
+    | '/salary-message'
     | '/settings'
     | '/staff/$staffId'
   id:
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/len-den'
     | '/month'
     | '/notes'
+    | '/salary-message'
     | '/settings'
     | '/staff/$staffId'
   fileRoutesById: FileRoutesById
@@ -208,6 +220,7 @@ export interface RootRouteChildren {
   LenDenRoute: typeof LenDenRoute
   MonthRoute: typeof MonthRoute
   NotesRoute: typeof NotesRoute
+  SalaryMessageRoute: typeof SalaryMessageRoute
   SettingsRoute: typeof SettingsRoute
   StaffStaffIdRoute: typeof StaffStaffIdRoute
 }
@@ -298,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NotesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/salary-message': {
+      id: '/salary-message'
+      path: '/salary-message'
+      fullPath: '/salary-message'
+      preLoaderRoute: typeof SalaryMessageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -328,6 +348,7 @@ const rootRouteChildren: RootRouteChildren = {
   LenDenRoute: LenDenRoute,
   MonthRoute: MonthRoute,
   NotesRoute: NotesRoute,
+  SalaryMessageRoute: SalaryMessageRoute,
   SettingsRoute: SettingsRoute,
   StaffStaffIdRoute: StaffStaffIdRoute,
 }
