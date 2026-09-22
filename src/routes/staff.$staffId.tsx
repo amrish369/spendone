@@ -277,12 +277,16 @@ function StaffCalendarPage() {
                   : status === "absent"
                     ? "bg-destructive/20 text-destructive"
                     : "bg-secondary text-secondary-foreground";
+            const isSel = d === selected;
             return (
-              <div
+              <button
                 key={d}
-                className={`relative rounded-lg py-2 text-center text-sm font-medium ${style} ${
-                  isToday ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
-                }`}
+                type="button"
+                onClick={() => setSelected(d)}
+                aria-pressed={isSel}
+                className={`relative rounded-lg py-2 text-center text-sm font-medium transition-colors ${
+                  isSel ? "bg-primary text-primary-foreground" : style
+                } ${isToday ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
               >
                 {Number(d.slice(-2))}
                 {status && on && (
