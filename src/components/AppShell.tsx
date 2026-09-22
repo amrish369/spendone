@@ -17,6 +17,7 @@ const NAV = [
   { to: "/calendar", label: "📆 Calendar & Salary" },
   { to: "/khatabook", label: "📒 Ledger" },
   { to: "/funding", label: "💬 Message" },
+  { to: "/salary-message", label: "💰 Salary Message" },
   { to: "/notes", label: "🗒️ Note Pad" },
   { to: "/export", label: "📥 Excel" },
   { to: "/settings", label: "⚙️ Settings" },

@@ -155,6 +155,27 @@ function CalendarPage() {
     }
   };
 
+  const clearMark = async (member: Staff) => {
+    setBusyId(member.id);
+    try {
+      const existing = attendance.find((a) => a.date === selected && a.staff_id === member.id);
+      if (!existing) {
+        toast.info(`${member.name}: nothing marked on this date`);
+        return;
+      }
+      await supabase.from("transactions").delete().eq("attendance_id", existing.id);
+      const { error } = await supabase.from("attendance").delete().eq("id", existing.id);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["attendance"] });
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success(`${member.name}: mark removed`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const attByStaff = useMemo(() => {
     const map = new Map<string, Map<string, string>>();
     attendance
@@ -363,6 +384,16 @@ function CalendarPage() {
                   Absent
                 </Button>
               </div>
+              {rec && (
+                <button
+                  type="button"
+                  disabled={busyId === member.id}
+                  onClick={() => clearMark(member)}
+                  className="mt-2 text-xs text-muted-foreground underline"
+                >
+                  ✖ Remove this day's mark
+                </button>
+              )}
             </div>
           );
         })}

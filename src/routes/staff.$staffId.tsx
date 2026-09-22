@@ -1,9 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppShell, Stat } from "@/components/AppShell";
-import { useAttendance, useStaff, useWorkDays } from "@/lib/data";
+import { supabase } from "@/integrations/supabase/client";
+import { useAttendance, useStaff, useWorkDays, currentUserId } from "@/lib/data";
 import { money, todayISO, monthKey, monthLabel, prettyRange } from "@/lib/format";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/staff/$staffId")({
   head: () => ({
@@ -38,12 +42,88 @@ function daysOfMonth(key: string) {
 
 function StaffCalendarPage() {
   const { staffId } = Route.useParams();
+  const qc = useQueryClient();
   const [month, setMonth] = useState(monthKey(todayISO()));
+  const [selected, setSelected] = useState(todayISO());
+  const [busy, setBusy] = useState(false);
   const { data: staff = [] } = useStaff();
   const { data: attendance = [] } = useAttendance();
   const { data: workDays = [] } = useWorkDays();
 
   const member = staff.find((s) => s.id === staffId);
+
+  const mark = async (status: "present" | "traveling" | "absent") => {
+    if (!member) return;
+    setBusy(true);
+    try {
+      const user_id = await currentUserId();
+      const amount = status === "absent" ? 0 : Number(member.da_amount) || 0;
+      const existing = attendance.find((a) => a.date === selected && a.staff_id === member.id);
+
+      const { data: saved, error } = await supabase
+        .from("attendance")
+        .upsert(
+          {
+            ...(existing ? { id: existing.id } : {}),
+            user_id,
+            staff_id: member.id,
+            date: selected,
+            status,
+            da_amount: amount,
+          },
+          { onConflict: "staff_id,date" },
+        )
+        .select()
+        .single();
+      if (error) throw error;
+
+      await supabase.from("transactions").delete().eq("attendance_id", saved.id);
+
+      if (status !== "absent" && amount > 0) {
+        const { error: txErr } = await supabase.from("transactions").insert({
+          user_id,
+          date: selected,
+          type: "expense",
+          category: member.name,
+          amount,
+          description: null,
+          source: "attendance",
+          attendance_id: saved.id,
+        });
+        if (txErr) throw txErr;
+      }
+
+      qc.invalidateQueries({ queryKey: ["attendance"] });
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success(`${member.name}: ${status} saved`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const clearMark = async () => {
+    if (!member) return;
+    setBusy(true);
+    try {
+      const existing = attendance.find((a) => a.date === selected && a.staff_id === member.id);
+      if (!existing) {
+        toast.info("Nothing marked on this date");
+        return;
+      }
+      await supabase.from("transactions").delete().eq("attendance_id", existing.id);
+      const { error } = await supabase.from("attendance").delete().eq("id", existing.id);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["attendance"] });
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success("Mark removed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const days = useMemo(() => daysOfMonth(month), [month]);
   const flags = useMemo(() => new Map(workDays.map((w) => [w.date, w.working])), [workDays]);
@@ -156,7 +236,11 @@ function StaffCalendarPage() {
         <Input
           type="month"
           value={month}
-          onChange={(e) => setMonth(e.target.value || month)}
+          onChange={(e) => {
+            const next = e.target.value || month;
+            setMonth(next);
+            setSelected(monthKey(todayISO()) === next ? todayISO() : `${next}-01`);
+          }}
           className="max-w-44"
         />
         <span className="text-sm text-muted-foreground">{monthLabel(month)}</span>
@@ -197,12 +281,16 @@ function StaffCalendarPage() {
                   : status === "absent"
                     ? "bg-destructive/20 text-destructive"
                     : "bg-secondary text-secondary-foreground";
+            const isSel = d === selected;
             return (
-              <div
+              <button
                 key={d}
-                className={`relative rounded-lg py-2 text-center text-sm font-medium ${style} ${
-                  isToday ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
-                }`}
+                type="button"
+                onClick={() => setSelected(d)}
+                aria-pressed={isSel}
+                className={`relative rounded-lg py-2 text-center text-sm font-medium transition-colors ${
+                  isSel ? "bg-primary text-primary-foreground" : style
+                } ${isToday ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
               >
                 {Number(d.slice(-2))}
                 {status && on && (
@@ -216,13 +304,54 @@ function StaffCalendarPage() {
                     }`}
                   />
                 )}
-              </div>
+              </button>
             );
           })}
         </div>
         <div className="mt-3 space-y-1 text-xs text-muted-foreground">
           <p>🟢 Present · 🔵 Traveling · 🔴 Absent · struck-through = holiday</p>
-          <p>Ring = today. Days without a color are working days not yet marked.</p>
+          <p>Tap any date to change {member.name}'s attendance for that day.</p>
+        </div>
+        <div className="mt-3 border-t pt-3">
+          <p className="mb-2 text-sm font-medium">
+            {selected} — {myAtt.get(selected) ?? "not marked"}
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            <Button
+              size="sm"
+              disabled={busy}
+              variant={myAtt.get(selected) === "present" ? "default" : "outline"}
+              onClick={() => mark("present")}
+            >
+              Present
+            </Button>
+            <Button
+              size="sm"
+              disabled={busy}
+              variant={myAtt.get(selected) === "traveling" ? "secondary" : "outline"}
+              onClick={() => mark("traveling")}
+            >
+              🚌 Traveling
+            </Button>
+            <Button
+              size="sm"
+              disabled={busy}
+              variant={myAtt.get(selected) === "absent" ? "destructive" : "outline"}
+              onClick={() => mark("absent")}
+            >
+              Absent
+            </Button>
+          </div>
+          {myAtt.get(selected) && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={clearMark}
+              className="mt-2 text-xs text-muted-foreground underline"
+            >
+              ✖ Remove this day's mark
+            </button>
+          )}
         </div>
       </div>
 
