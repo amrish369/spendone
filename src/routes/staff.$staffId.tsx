@@ -300,13 +300,54 @@ function StaffCalendarPage() {
                     }`}
                   />
                 )}
-              </div>
+              </button>
             );
           })}
         </div>
         <div className="mt-3 space-y-1 text-xs text-muted-foreground">
           <p>🟢 Present · 🔵 Traveling · 🔴 Absent · struck-through = holiday</p>
-          <p>Ring = today. Days without a color are working days not yet marked.</p>
+          <p>Tap any date to change {member.name}'s attendance for that day.</p>
+        </div>
+        <div className="mt-3 border-t pt-3">
+          <p className="mb-2 text-sm font-medium">
+            {selected} — {myAtt.get(selected) ?? "not marked"}
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            <Button
+              size="sm"
+              disabled={busy}
+              variant={myAtt.get(selected) === "present" ? "default" : "outline"}
+              onClick={() => mark("present")}
+            >
+              Present
+            </Button>
+            <Button
+              size="sm"
+              disabled={busy}
+              variant={myAtt.get(selected) === "traveling" ? "secondary" : "outline"}
+              onClick={() => mark("traveling")}
+            >
+              🚌 Traveling
+            </Button>
+            <Button
+              size="sm"
+              disabled={busy}
+              variant={myAtt.get(selected) === "absent" ? "destructive" : "outline"}
+              onClick={() => mark("absent")}
+            >
+              Absent
+            </Button>
+          </div>
+          {myAtt.get(selected) && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={clearMark}
+              className="mt-2 text-xs text-muted-foreground underline"
+            >
+              ✖ Remove this day's mark
+            </button>
+          )}
         </div>
       </div>
 
