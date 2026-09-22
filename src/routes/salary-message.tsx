@@ -93,10 +93,14 @@ function SalaryMessagePage() {
       const da = Number(s.da_amount) || 0;
       const paid = present + traveling;
 
+      // Base salary per working day: daily staff use their per-day salary;
+      // monthly staff are prorated by that month's working days (weighted).
+      let base = 0;
       let earned = 0;
       paidByMonth.forEach((paidDays, key) => {
         if (daily) {
           earned += paidDays * salary;
+          base = salary;
           return;
         }
         let wc = workingPerMonth.get(key);
@@ -104,7 +108,9 @@ function SalaryMessagePage() {
           wc = daysOfMonth(key).filter(isWorking).length;
           workingPerMonth.set(key, wc);
         }
-        earned += wc > 0 ? (salary / wc) * paidDays : 0;
+        const perDay = wc > 0 ? salary / wc : 0;
+        earned += perDay * paidDays;
+        base = paid > 0 ? earned / paid : 0; // effective average base/day
       });
 
       const dates = mine.map((a) => a.date).sort();
@@ -117,6 +123,7 @@ function SalaryMessagePage() {
         da: paid * da,
         daRate: da,
         earned,
+        base,
         daily,
         salary,
         firstDate: dates[0] ?? null,
@@ -144,12 +151,14 @@ function SalaryMessagePage() {
     let out = `Salary Report\n${shortDate(from)} to ${shortDate(to)}\n\n`;
     withData.forEach((r) => {
       out += `${r.staff.name}\n`;
-      out += `Working days = ${r.paid}\n`;
-      out += `Present = ${r.present}\n`;
-      if (r.traveling > 0) out += `Traveling = ${r.traveling}\n`;
-      if (r.absent > 0) out += `Absent = ${r.absent}\n`;
-      out += `DA taken = ${num(r.da)}\n`;
-      out += `Salary = ${num(r.earned)}\n\n`;
+      if (r.firstDate && r.lastDate) out += `Work: ${shortDate(r.firstDate)} to ${shortDate(r.lastDate)}\n`;
+      out += `Working days = ${r.paid}`;
+      const parts: string[] = [`Present ${r.present}`];
+      if (r.traveling > 0) parts.push(`Traveling ${r.traveling}`);
+      if (r.absent > 0) parts.push(`Absent ${r.absent}`);
+      out += ` (${parts.join(", ")})\n`;
+      out += `Salary: ${r.paid} × ${num(r.base)} = ${num(r.earned)}\n`;
+      out += `DA: ${r.paid} × ${num(r.daRate)} = ${num(r.da)}\n\n`;
     });
 
     const totalSalary = withData.reduce((s, r) => s + r.earned, 0);
