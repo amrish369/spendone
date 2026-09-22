@@ -42,12 +42,88 @@ function daysOfMonth(key: string) {
 
 function StaffCalendarPage() {
   const { staffId } = Route.useParams();
+  const qc = useQueryClient();
   const [month, setMonth] = useState(monthKey(todayISO()));
+  const [selected, setSelected] = useState(todayISO());
+  const [busy, setBusy] = useState(false);
   const { data: staff = [] } = useStaff();
   const { data: attendance = [] } = useAttendance();
   const { data: workDays = [] } = useWorkDays();
 
   const member = staff.find((s) => s.id === staffId);
+
+  const mark = async (status: "present" | "traveling" | "absent") => {
+    if (!member) return;
+    setBusy(true);
+    try {
+      const user_id = await currentUserId();
+      const amount = status === "absent" ? 0 : Number(member.da_amount) || 0;
+      const existing = attendance.find((a) => a.date === selected && a.staff_id === member.id);
+
+      const { data: saved, error } = await supabase
+        .from("attendance")
+        .upsert(
+          {
+            ...(existing ? { id: existing.id } : {}),
+            user_id,
+            staff_id: member.id,
+            date: selected,
+            status,
+            da_amount: amount,
+          },
+          { onConflict: "staff_id,date" },
+        )
+        .select()
+        .single();
+      if (error) throw error;
+
+      await supabase.from("transactions").delete().eq("attendance_id", saved.id);
+
+      if (status !== "absent" && amount > 0) {
+        const { error: txErr } = await supabase.from("transactions").insert({
+          user_id,
+          date: selected,
+          type: "expense",
+          category: member.name,
+          amount,
+          description: null,
+          source: "attendance",
+          attendance_id: saved.id,
+        });
+        if (txErr) throw txErr;
+      }
+
+      qc.invalidateQueries({ queryKey: ["attendance"] });
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success(`${member.name}: ${status} saved`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const clearMark = async () => {
+    if (!member) return;
+    setBusy(true);
+    try {
+      const existing = attendance.find((a) => a.date === selected && a.staff_id === member.id);
+      if (!existing) {
+        toast.info("Nothing marked on this date");
+        return;
+      }
+      await supabase.from("transactions").delete().eq("attendance_id", existing.id);
+      const { error } = await supabase.from("attendance").delete().eq("id", existing.id);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["attendance"] });
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success("Mark removed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const days = useMemo(() => daysOfMonth(month), [month]);
   const flags = useMemo(() => new Map(workDays.map((w) => [w.date, w.working])), [workDays]);
