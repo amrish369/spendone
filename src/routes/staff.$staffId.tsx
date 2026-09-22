@@ -1,9 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppShell, Stat } from "@/components/AppShell";
-import { useAttendance, useStaff, useWorkDays } from "@/lib/data";
+import { supabase } from "@/integrations/supabase/client";
+import { useAttendance, useStaff, useWorkDays, currentUserId } from "@/lib/data";
 import { money, todayISO, monthKey, monthLabel, prettyRange } from "@/lib/format";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/staff/$staffId")({
   head: () => ({
