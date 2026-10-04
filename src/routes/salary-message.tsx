@@ -244,8 +244,16 @@ function SalaryMessagePage() {
               <p className="text-lg font-bold text-primary">{money(r.earned)}</p>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Present {r.present} · Traveling {r.traveling} · Absent {r.absent} · DA already taken{" "}
-              {money(r.da)}
+              {r.firstDate && r.lastDate && (
+                <>
+                  Work: {shortDate(r.firstDate)} to {shortDate(r.lastDate)} ·{" "}
+                </>
+              )}
+              Present {r.present} · Traveling {r.traveling} · Absent {r.absent}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Salary: {r.paid} × {money(r.base)} = {money(r.earned)} · DA: {r.paid} ×{" "}
+              {money(r.daRate)} = {money(r.da)}
             </p>
           </div>
         ))}
