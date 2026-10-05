@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
-import { Menu, LogOut } from "lucide-react";
+import { Menu, LogOut, Home, Plus, CalendarCheck, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
   }
 
   return (
-    <div className="min-h-screen bg-background pb-16">
+    <div className="min-h-screen bg-background pb-24 md:pb-16">
       <header className="brand-gradient sticky top-0 z-40 flex items-center gap-3 px-4 py-3 text-primary-foreground shadow-lg">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
@@ -99,6 +99,44 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
         </Button>
       </header>
       <main className="mx-auto w-full max-w-3xl px-4 py-5">{children}</main>
+      <nav
+        aria-label="Bottom navigation"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+      >
+        <div className="mx-auto grid h-16 max-w-xl grid-cols-5 items-center">
+          {[
+            { to: "/", label: "Home", Icon: Home },
+            { to: "/add", label: "Add", Icon: Plus },
+            { to: "/attendance", label: "Attendance", Icon: CalendarCheck },
+            { to: "/funding", label: "Message", Icon: MessageCircle },
+          ].map(({ to, label, Icon }) => {
+            const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
+            return (
+              <Button
+                key={to}
+                asChild
+                variant={active ? "secondary" : "ghost"}
+                className={`h-14 w-full flex-col gap-1 rounded-md px-1 text-xs ${active ? "text-primary" : "text-muted-foreground"}`}
+              >
+                <Link to={to} aria-current={active ? "page" : undefined}>
+                  <Icon className="size-5 shrink-0" aria-hidden="true" />
+                  <span className="truncate">{label}</span>
+                </Link>
+              </Button>
+            );
+          })}
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => setOpen(true)}
+            aria-label="Open all pages menu"
+            className="h-14 w-full flex-col gap-1 rounded-md px-1 text-xs text-muted-foreground"
+          >
+            <Menu className="size-5 shrink-0" aria-hidden="true" />
+            <span>More</span>
+          </Button>
+        </div>
+      </nav>
     </div>
   );
 }
