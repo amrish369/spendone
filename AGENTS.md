@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep authenticated app navigation centralized in `AppShell`, including shared mobile navigation, so page access stays consistent across routes.
