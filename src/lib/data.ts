@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { cachedQuery } from "@/lib/offline";
 
 export type Txn = {
   id: string;
@@ -59,13 +60,13 @@ export function useTransactions() {
   return useQuery({
     queryKey: ["transactions"],
     queryFn: () =>
-      unwrap<Txn[]>(
+      cachedQuery("transactions", () => unwrap<Txn[]>(
         supabase
           .from("transactions")
           .select("*")
           .order("date", { ascending: false })
           .order("created_at", { ascending: false }),
-      ),
+      )),
   });
 }
 
@@ -73,9 +74,9 @@ export function useCategories() {
   return useQuery({
     queryKey: ["categories"],
     queryFn: () =>
-      unwrap<Category[]>(
+      cachedQuery("categories", () => unwrap<Category[]>(
         supabase.from("categories").select("*").order("created_at", { ascending: true }),
-      ),
+      )),
   });
 }
 
@@ -83,7 +84,7 @@ export function useStaff() {
   return useQuery({
     queryKey: ["staff"],
     queryFn: () =>
-      unwrap<Staff[]>(supabase.from("staff").select("*").order("created_at", { ascending: true })),
+      cachedQuery("staff", () => unwrap<Staff[]>(supabase.from("staff").select("*").order("created_at", { ascending: true }))),
   });
 }
 
@@ -93,7 +94,7 @@ export function useAttendance(date?: string) {
     queryFn: () => {
       let q = supabase.from("attendance").select("*").order("date", { ascending: false });
       if (date) q = q.eq("date", date);
-      return unwrap<Attendance[]>(q);
+      return cachedQuery(`attendance:${date ?? "all"}`, () => unwrap<Attendance[]>(q));
     },
   });
 }
@@ -102,9 +103,9 @@ export function useWorkLogs() {
   return useQuery({
     queryKey: ["work_logs"],
     queryFn: () =>
-      unwrap<WorkLog[]>(
+      cachedQuery("work_logs", () => unwrap<WorkLog[]>(
         supabase.from("work_logs").select("*").order("date", { ascending: false }),
-      ),
+      )),
   });
 }
 
@@ -114,9 +115,9 @@ export function useWorkDays() {
   return useQuery({
     queryKey: ["work_days"],
     queryFn: () =>
-      unwrap<WorkDay[]>(
+      cachedQuery("work_days", () => unwrap<WorkDay[]>(
         supabase.from("work_days").select("*").order("date", { ascending: true }),
-      ),
+      )),
   });
 }
 
@@ -124,9 +125,9 @@ export function useCustomers() {
   return useQuery({
     queryKey: ["customers"],
     queryFn: () =>
-      unwrap<Customer[]>(
+      cachedQuery("customers", () => unwrap<Customer[]>(
         supabase.from("customers").select("*").order("created_at", { ascending: false }),
-      ),
+      )),
   });
 }
 
@@ -136,7 +137,7 @@ export function useLedgerEntries(customerId?: string) {
     queryFn: () => {
       let q = supabase.from("ledger_entries").select("*").order("date", { ascending: false });
       if (customerId) q = q.eq("customer_id", customerId);
-      return unwrap<LedgerEntry[]>(q);
+      return cachedQuery(`ledger:${customerId ?? "all"}`, () => unwrap<LedgerEntry[]>(q));
     },
   });
 }
@@ -156,6 +157,6 @@ export function useTableMutation(invalidate: string[]) {
 }
 
 export async function currentUserId() {
-  const { data } = await supabase.auth.getUser();
-  return data.user?.id ?? "";
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user.id ?? "";
 }

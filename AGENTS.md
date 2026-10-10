@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Keep authenticated app navigation centralized in `AppShell`, including shared mobile navigation, so page access stays consistent across routes.
+- Keep offline persistence user-scoped in IndexedDB, and route queued expense/attendance writes through one shared sync module so reconnect retries remain idempotent.
