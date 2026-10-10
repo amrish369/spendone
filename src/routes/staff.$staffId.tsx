@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell, Stat } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { useAttendance, useStaff, useWorkDays, currentUserId } from "@/lib/data";
+import { useAttendance, useStaff, useWorkDays, currentUserId, type Attendance, type Txn } from "@/lib/data";
+import { deleteAttendanceOffline, saveAttendanceOffline } from "@/lib/offline";
 import { money, todayISO, monthKey, monthLabel, prettyRange } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -60,42 +61,26 @@ function StaffCalendarPage() {
       const amount = status === "absent" ? 0 : Number(member.da_amount) || 0;
       const existing = attendance.find((a) => a.date === selected && a.staff_id === member.id);
 
-      const { data: saved, error } = await supabase
-        .from("attendance")
-        .upsert(
-          {
-            ...(existing ? { id: existing.id } : {}),
-            user_id,
-            staff_id: member.id,
-            date: selected,
-            status,
-            da_amount: amount,
-          },
-          { onConflict: "staff_id,date" },
-        )
-        .select()
-        .single();
-      if (error) throw error;
-
-      await supabase.from("transactions").delete().eq("attendance_id", saved.id);
-
-      if (status !== "absent" && amount > 0) {
-        const { error: txErr } = await supabase.from("transactions").insert({
-          user_id,
-          date: selected,
-          type: "expense",
-          category: member.name,
-          amount,
-          description: null,
-          source: "attendance",
-          attendance_id: saved.id,
-        });
-        if (txErr) throw txErr;
-      }
-
+      const result = await saveAttendanceOffline({
+        userId: user_id,
+        staffId: member.id,
+        staffName: member.name,
+        date: selected,
+        status,
+        daAmount: amount,
+        existingId: existing?.id,
+      });
+      qc.setQueryData<Attendance[]>(["attendance", "all"], (current = []) => [
+        ...current.filter((record) => record.staff_id !== member.id || record.date !== selected),
+        result.attendance,
+      ]);
+      qc.setQueryData<Txn[]>(["transactions"], (current = []) => {
+        const withoutPrevious = current.filter((txn) => txn.attendance_id !== result.attendance.id);
+        return result.transaction ? [result.transaction as Txn, ...withoutPrevious] : withoutPrevious;
+      });
       qc.invalidateQueries({ queryKey: ["attendance"] });
       qc.invalidateQueries({ queryKey: ["transactions"] });
-      toast.success(`${member.name}: ${status} saved`);
+      toast.success(result.queued ? `${member.name}: saved on this device; it will sync when online.` : `${member.name}: ${status} saved`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -112,12 +97,17 @@ function StaffCalendarPage() {
         toast.info("Nothing marked on this date");
         return;
       }
-      await supabase.from("transactions").delete().eq("attendance_id", existing.id);
-      const { error } = await supabase.from("attendance").delete().eq("id", existing.id);
-      if (error) throw error;
+      const user_id = await currentUserId();
+      const result = await deleteAttendanceOffline(user_id, existing.id);
+      qc.setQueryData<Attendance[]>(["attendance", "all"], (current = []) =>
+        current.filter((record) => record.id !== existing.id),
+      );
+      qc.setQueryData<Txn[]>(["transactions"], (current = []) =>
+        current.filter((txn) => txn.attendance_id !== existing.id),
+      );
       qc.invalidateQueries({ queryKey: ["attendance"] });
       qc.invalidateQueries({ queryKey: ["transactions"] });
-      toast.success("Mark removed");
+      toast.success(result.queued ? "Removal saved and will sync when online" : "Mark removed");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {

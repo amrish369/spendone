@@ -130,6 +130,20 @@ export async function saveAttendanceOffline(input: {
     staffName: input.staffName,
     daTransactionId,
   };
+  const transaction =
+    input.status !== "absent" && input.daAmount > 0
+      ? {
+          id: daTransactionId,
+          user_id: input.userId,
+          date: input.date,
+          type: "expense" as const,
+          category: input.staffName,
+          amount: input.daAmount,
+          description: null,
+          source: "attendance",
+          attendance_id: attendance.id,
+        }
+      : null;
 
   if (navigator.onLine) {
     try {
@@ -161,7 +175,7 @@ export async function saveAttendanceOffline(input: {
         );
         if (transactionError) throw transactionError;
       }
-      return { attendance: saved as OfflineAttendance, queued: false };
+      return { attendance: saved as OfflineAttendance, transaction, queued: false };
     } catch (error) {
       if (!isNetworkError(error)) throw error;
     }
@@ -173,7 +187,7 @@ export async function saveAttendanceOffline(input: {
     kind: "attendance-save",
     payload,
   });
-  return { attendance, queued: true };
+  return { attendance, transaction, queued: true };
 }
 
 export async function deleteAttendanceOffline(userId: string, attendanceId: string) {

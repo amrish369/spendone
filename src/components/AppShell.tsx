@@ -6,6 +6,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { OFFLINE_CHANGE_EVENT, pendingCount, syncPendingChanges } from "@/lib/offline";
 
 const NAV = [
   { to: "/", label: "🏠 Home" },
@@ -27,7 +30,41 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const queryClient = useQueryClient();
+  const [isOnline, setIsOnline] = useState(true);
+  const [pending, setPending] = useState(0);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useEffect(() => {
+    const refreshPending = () => {
+      if (user) void pendingCount(user.id).then(setPending);
+    };
+    const sync = async () => {
+      setIsOnline(navigator.onLine);
+      if (!user || !navigator.onLine) return refreshPending();
+      const result = await syncPendingChanges(user.id);
+      setPending(result.remaining);
+      if (result.synced > 0) {
+        await Promise.all(
+          ["transactions", "attendance", "work_logs", "work_days"].map((key) =>
+            queryClient.invalidateQueries({ queryKey: [key] }),
+          ),
+        );
+        toast.success(`Synced ${result.synced} saved ${result.synced === 1 ? "change" : "changes"}.`);
+      }
+    };
+    const onOnline = () => void sync();
+    const onOffline = () => setIsOnline(false);
+    void sync();
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    window.addEventListener(OFFLINE_CHANGE_EVENT, refreshPending);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+      window.removeEventListener(OFFLINE_CHANGE_EVENT, refreshPending);
+    };
+  }, [user, queryClient]);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -98,6 +135,13 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
           <LogOut className="size-5" />
         </Button>
       </header>
+      <div
+        role="status"
+        className={`flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium ${isOnline ? "bg-success/10 text-success" : "bg-warning/15 text-warning-foreground"}`}
+      >
+        <span aria-hidden="true" className={`size-2 rounded-full ${isOnline ? "bg-success" : "bg-warning"}`} />
+        {isOnline ? (pending > 0 ? `Online · ${pending} change${pending === 1 ? "" : "s"} waiting to sync` : "Online · synced") : `Offline · ${pending > 0 ? `${pending} saved change${pending === 1 ? "" : "s"} waiting to sync` : "showing saved data"}`}
+      </div>
       <main className="mx-auto w-full max-w-3xl px-4 py-5">{children}</main>
       <nav
         aria-label="Bottom navigation"
