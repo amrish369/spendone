@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { useCategories, useTransactions, currentUserId } from "@/lib/data";
+import { useCategories, useTransactions, currentUserId, type Txn } from "@/lib/data";
+import { saveTransactionOffline } from "@/lib/offline";
 import { DEFAULT_CATEGORIES } from "@/lib/constants";
 import { todayISO } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -65,24 +66,28 @@ function AddPage() {
     }
     setBusy(true);
     try {
+      const user_id = await currentUserId();
       const payload = {
+        ...(edit ? { id: edit } : {}),
+        user_id,
         date,
         category,
         amount: Number(amount),
         description: description || null,
         type,
       };
-      if (edit) {
-        const { error } = await supabase.from("transactions").update(payload).eq("id", edit);
-        if (error) throw error;
-        toast.success("Updated!");
-      } else {
-        const user_id = await currentUserId();
-        const { error } = await supabase.from("transactions").insert({ ...payload, user_id });
-        if (error) throw error;
-        toast.success("Added!");
+      const result = await saveTransactionOffline(payload, Boolean(edit));
+      qc.setQueryData<Txn[]>(["transactions"], (current = []) => {
+        const next = result.row as Txn;
+        return edit
+          ? current.map((transaction) => (transaction.id === edit ? { ...transaction, ...next } : transaction))
+          : [next, ...current];
+      });
+      if (result.queued) toast.success("Saved on this device. It will sync when you’re online.");
+      else {
+        toast.success(edit ? "Updated!" : "Added!");
+        qc.invalidateQueries({ queryKey: ["transactions"] });
       }
-      qc.invalidateQueries({ queryKey: ["transactions"] });
       if (edit) navigate({ to: "/len-den" });
       else {
         setAmount("");
