@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Trash2 } from "lucide-react";
+import { clearOfflineData } from "@/lib/offline";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -83,6 +84,7 @@ function SettingsPage() {
           .neq("id", "00000000-0000-0000-0000-000000000000");
         if (error) throw error;
       }
+      if (user?.id) await clearOfflineData(user.id);
       qc.clear();
       toast.success("All data cleared. Fresh start!");
       setConfirmWipe(false);

@@ -13,6 +13,18 @@ type OfflineTransaction = {
   attendance_id?: string | null;
 };
 
+type TransactionWrite = {
+  id?: string;
+  user_id: string;
+  date: string;
+  type: "expense" | "funding";
+  category: string;
+  amount: number;
+  description: string | null;
+  source?: string;
+  attendance_id?: string | null;
+};
+
 type OfflineAttendance = {
   id: string;
   user_id: string;
@@ -152,7 +164,7 @@ export async function saveAttendanceOffline(input: {
   date: string;
   status: OfflineAttendance["status"];
   daAmount: number;
-  existingId?: string;
+  existingId?: string | undefined;
 }) {
   const attendance: OfflineAttendance = {
     id: input.existingId ?? crypto.randomUUID(),
@@ -257,18 +269,19 @@ async function applyPendingChange(change: PendingChange) {
   if (change.kind === "transaction-insert") {
     const { error } = await supabase
       .from("transactions")
-      .upsert(change.payload, { onConflict: "id" });
+      .upsert(change.payload as unknown as TransactionWrite, { onConflict: "id" });
     if (error) throw error;
     return;
   }
   if (change.kind === "transaction-update") {
-    const { id, ...updates } = change.payload;
+    const { id, ...rawUpdates } = change.payload;
+    const updates = rawUpdates as Partial<TransactionWrite>;
     const { error } = await supabase.from("transactions").update(updates).eq("id", String(id));
     if (error) throw error;
     return;
   }
   if (change.kind === "attendance-delete") {
-    const attendanceId = String(change.payload.attendanceId);
+    const attendanceId = String(change.payload["attendanceId"]);
     const { error: transactionError } = await supabase
       .from("transactions")
       .delete()
