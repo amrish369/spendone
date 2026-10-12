@@ -57,16 +57,52 @@ async function enqueue(change: PendingChange) {
   announceChange();
 }
 
+function applyQueuedChanges<T>(data: T, changes: PendingChange[], queryKey: string): T {
+  if (!Array.isArray(data)) return data;
+  let rows = [...(data as Record<string, unknown>[])];
+
+  for (const change of changes) {
+    if (queryKey === "transactions" && (change.kind === "transaction-insert" || change.kind === "transaction-update")) {
+      const transaction = change.payload;
+      const index = rows.findIndex((row) => row["id"] === transaction["id"]);
+      if (index < 0) rows.unshift(transaction);
+      else rows[index] = { ...rows[index], ...transaction };
+    }
+
+    if (queryKey.startsWith("attendance:") && change.kind === "attendance-save") {
+      const payload = change.payload as { attendance: Record<string, unknown> };
+      const attendance = payload.attendance;
+      if (queryKey === "attendance:all" || attendance["date"] === queryKey.slice("attendance:".length)) {
+        rows = rows.filter(
+          (row) => row["staff_id"] !== attendance["staff_id"] || row["date"] !== attendance["date"],
+        );
+        rows.unshift(attendance);
+      }
+    }
+
+    if (queryKey.startsWith("attendance:") && change.kind === "attendance-delete") {
+      const attendanceId = change.payload["attendanceId"];
+      rows = rows.filter((row) => row["id"] !== attendanceId);
+    }
+  }
+
+  return rows as T;
+}
+
 export async function cachedQuery<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
   const userId = await localUserId();
   try {
     const result = await fetcher();
     if (userId) await set(cacheKey(userId, key), result);
-    return result;
+    const changes = userId ? (await get<PendingChange[]>(queueKey(userId))) ?? [] : [];
+    return applyQueuedChanges(result, changes, key);
   } catch (error) {
     if (userId) {
       const cached = await get<T>(cacheKey(userId, key));
-      if (cached !== undefined) return cached;
+      if (cached !== undefined) {
+        const changes = (await get<PendingChange[]>(queueKey(userId))) ?? [];
+        return applyQueuedChanges(cached, changes, key);
+      }
     }
     throw error;
   }
