@@ -71,6 +71,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
   }, [loading, user, navigate]);
 
   const signOut = async () => {
+    queryClient.clear();
     await supabase.auth.signOut();
     navigate({ to: "/auth" });
   };
