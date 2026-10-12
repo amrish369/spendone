@@ -90,6 +90,7 @@ function applyQueuedChanges<T>(data: T, changes: PendingChange[], queryKey: stri
 }
 
 export async function cachedQuery<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+  if (typeof window === "undefined") return fetcher();
   const userId = await localUserId();
   try {
     const result = await fetcher();
@@ -99,9 +100,10 @@ export async function cachedQuery<T>(key: string, fetcher: () => Promise<T>): Pr
   } catch (error) {
     if (userId) {
       const cached = await get<T>(cacheKey(userId, key));
-      if (cached !== undefined) {
-        const changes = (await get<PendingChange[]>(queueKey(userId))) ?? [];
-        return applyQueuedChanges(cached, changes, key);
+      const changes = (await get<PendingChange[]>(queueKey(userId))) ?? [];
+      if (cached !== undefined) return applyQueuedChanges(cached, changes, key);
+      if (key === "transactions" || key.startsWith("attendance:")) {
+        return applyQueuedChanges([] as T, changes, key);
       }
     }
     throw error;
@@ -338,7 +340,7 @@ export async function syncPendingChanges(userId: string) {
 export async function clearOfflineData(userId: string) {
   if (!userId) return;
   const keys = ["transactions", "categories", "staff", "attendance:all", "work_logs", "work_days", "customers", "ledger:all"];
-  await Promise.all(keys.map((key) => del(cacheKey(userId, key))));
+  await Promise.all([...keys.map((key) => del(cacheKey(userId, key))), del(queueKey(userId))]);
 }
 
 export const OFFLINE_CHANGE_EVENT = changeEvent;
