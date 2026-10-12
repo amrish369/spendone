@@ -417,7 +417,8 @@ export async function syncPendingChanges(userId: string) {
       synced += 1;
       announceChange();
     } catch {
-      // Keep changes that could not be sent; the next online retry will try again.
+      // Preserve queue ordering when one operation depends on an earlier change.
+      break;
     }
   }
 
