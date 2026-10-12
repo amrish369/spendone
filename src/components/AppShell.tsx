@@ -53,16 +53,20 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
         toast.success(`Synced ${result.synced} saved ${result.synced === 1 ? "change" : "changes"}.`);
       }
     };
+    const onQueueChange = () => {
+      refreshPending();
+      if (navigator.onLine) void sync();
+    };
     const onOnline = () => void sync();
     const onOffline = () => setIsOnline(false);
     void sync();
     window.addEventListener("online", onOnline);
     window.addEventListener("offline", onOffline);
-    window.addEventListener(OFFLINE_CHANGE_EVENT, refreshPending);
+    window.addEventListener(OFFLINE_CHANGE_EVENT, onQueueChange);
     return () => {
       window.removeEventListener("online", onOnline);
       window.removeEventListener("offline", onOffline);
-      window.removeEventListener(OFFLINE_CHANGE_EVENT, refreshPending);
+      window.removeEventListener(OFFLINE_CHANGE_EVENT, onQueueChange);
     };
   }, [user, queryClient]);
 
@@ -71,6 +75,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
   }, [loading, user, navigate]);
 
   const signOut = async () => {
+    queryClient.clear();
     await supabase.auth.signOut();
     navigate({ to: "/auth" });
   };

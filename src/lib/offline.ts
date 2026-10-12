@@ -1,7 +1,19 @@
-import { del, get, set } from "idb-keyval";
+import { del, get, keys, set } from "idb-keyval";
 import { supabase } from "@/integrations/supabase/client";
 
 type OfflineTransaction = {
+  id?: string;
+  user_id: string;
+  date: string;
+  type: "expense" | "funding";
+  category: string;
+  amount: number;
+  description: string | null;
+  source?: string;
+  attendance_id?: string | null;
+};
+
+type TransactionWrite = {
   id?: string;
   user_id: string;
   date: string;
@@ -25,7 +37,12 @@ type OfflineAttendance = {
 type PendingChange = {
   id: string;
   userId: string;
-  kind: "transaction-insert" | "transaction-update" | "attendance-save" | "attendance-delete";
+  kind:
+    | "transaction-insert"
+    | "transaction-update"
+    | "transaction-delete"
+    | "attendance-save"
+    | "attendance-delete";
   payload: Record<string, unknown>;
 };
 
@@ -57,16 +74,57 @@ async function enqueue(change: PendingChange) {
   announceChange();
 }
 
+function applyQueuedChanges<T>(data: T, changes: PendingChange[], queryKey: string): T {
+  if (!Array.isArray(data)) return data;
+  let rows = [...(data as Record<string, unknown>[])];
+
+  for (const change of changes) {
+    if (queryKey === "transactions" && (change.kind === "transaction-insert" || change.kind === "transaction-update")) {
+      const transaction = change.payload;
+      const index = rows.findIndex((row) => row["id"] === transaction["id"]);
+      if (index < 0) rows.unshift(transaction);
+      else rows[index] = { ...rows[index], ...transaction };
+    }
+    if (queryKey === "transactions" && change.kind === "transaction-delete") {
+      rows = rows.filter((row) => row["id"] !== change.payload["transactionId"]);
+    }
+
+    if (queryKey.startsWith("attendance:") && change.kind === "attendance-save") {
+      const payload = change.payload as { attendance: Record<string, unknown> };
+      const attendance = payload.attendance;
+      if (queryKey === "attendance:all" || attendance["date"] === queryKey.slice("attendance:".length)) {
+        rows = rows.filter(
+          (row) => row["staff_id"] !== attendance["staff_id"] || row["date"] !== attendance["date"],
+        );
+        rows.unshift(attendance);
+      }
+    }
+
+    if (queryKey.startsWith("attendance:") && change.kind === "attendance-delete") {
+      const attendanceId = change.payload["attendanceId"];
+      rows = rows.filter((row) => row["id"] !== attendanceId);
+    }
+  }
+
+  return rows as T;
+}
+
 export async function cachedQuery<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+  if (typeof window === "undefined") return fetcher();
   const userId = await localUserId();
   try {
     const result = await fetcher();
     if (userId) await set(cacheKey(userId, key), result);
-    return result;
+    const changes = userId ? (await get<PendingChange[]>(queueKey(userId))) ?? [] : [];
+    return applyQueuedChanges(result, changes, key);
   } catch (error) {
     if (userId) {
       const cached = await get<T>(cacheKey(userId, key));
-      if (cached !== undefined) return cached;
+      const changes = (await get<PendingChange[]>(queueKey(userId))) ?? [];
+      if (cached !== undefined) return applyQueuedChanges(cached, changes, key);
+      if (key === "transactions" || key.startsWith("attendance:")) {
+        return applyQueuedChanges([] as T, changes, key);
+      }
     }
     throw error;
   }
@@ -81,6 +139,34 @@ export async function pendingCount(userId: string) {
 export async function saveTransactionOffline(transaction: OfflineTransaction, update = false) {
   const id = transaction.id ?? crypto.randomUUID();
   const row = { ...transaction, id, source: transaction.source ?? "manual" };
+  const userQueueKey = queueKey(transaction.user_id);
+  const currentQueue = (await get<PendingChange[]>(userQueueKey)) ?? [];
+  const queuedInsert = update
+    ? currentQueue.find(
+        (change) => change.kind === "transaction-insert" && change.payload["id"] === id,
+      )
+    : undefined;
+  if (queuedInsert) {
+    const mergedRow = { ...queuedInsert.payload, ...row };
+    if (navigator.onLine) {
+      try {
+        const { error } = await supabase
+          .from("transactions")
+          .upsert(mergedRow as unknown as TransactionWrite, { onConflict: "id" });
+        if (error) throw error;
+        await set(
+          userQueueKey,
+          currentQueue.filter((change) => change.id !== queuedInsert.id),
+        );
+        announceChange();
+        return { row: mergedRow, queued: false };
+      } catch (error) {
+        if (!isNetworkError(error)) throw error;
+      }
+    }
+    await enqueue({ ...queuedInsert, payload: mergedRow });
+    return { row: mergedRow, queued: true };
+  }
   const change: PendingChange = {
     id: update ? `transaction-update:${id}` : `transaction-insert:${id}`,
     userId: transaction.user_id,
@@ -114,7 +200,7 @@ export async function saveAttendanceOffline(input: {
   date: string;
   status: OfflineAttendance["status"];
   daAmount: number;
-  existingId?: string;
+  existingId?: string | undefined;
 }) {
   const attendance: OfflineAttendance = {
     id: input.existingId ?? crypto.randomUUID(),
@@ -215,22 +301,63 @@ export async function deleteAttendanceOffline(userId: string, attendanceId: stri
   return { queued: true };
 }
 
+export async function deleteTransactionOffline(userId: string, transactionId: string) {
+  const key = queueKey(userId);
+  const changes = (await get<PendingChange[]>(key)) ?? [];
+  const localCreate = changes.find(
+    (change) =>
+      change.kind === "transaction-insert" && change.payload["id"] === transactionId,
+  );
+  if (localCreate) {
+    await set(key, changes.filter((change) => change.id !== localCreate.id));
+    announceChange();
+    return { queued: false };
+  }
+
+  if (navigator.onLine) {
+    try {
+      const { error } = await supabase.from("transactions").delete().eq("id", transactionId);
+      if (error) throw error;
+      return { queued: false };
+    } catch (error) {
+      if (!isNetworkError(error)) throw error;
+    }
+  }
+
+  await enqueue({
+    id: `transaction-delete:${transactionId}`,
+    userId,
+    kind: "transaction-delete",
+    payload: { transactionId },
+  });
+  return { queued: true };
+}
+
 async function applyPendingChange(change: PendingChange) {
   if (change.kind === "transaction-insert") {
     const { error } = await supabase
       .from("transactions")
-      .upsert(change.payload, { onConflict: "id" });
+      .upsert(change.payload as unknown as TransactionWrite, { onConflict: "id" });
     if (error) throw error;
     return;
   }
   if (change.kind === "transaction-update") {
-    const { id, ...updates } = change.payload;
+    const { id, ...rawUpdates } = change.payload;
+    const updates = rawUpdates as Partial<TransactionWrite>;
     const { error } = await supabase.from("transactions").update(updates).eq("id", String(id));
     if (error) throw error;
     return;
   }
+  if (change.kind === "transaction-delete") {
+    const { error } = await supabase
+      .from("transactions")
+      .delete()
+      .eq("id", String(change.payload["transactionId"]));
+    if (error) throw error;
+    return;
+  }
   if (change.kind === "attendance-delete") {
-    const attendanceId = String(change.payload.attendanceId);
+    const attendanceId = String(change.payload["attendanceId"]);
     const { error: transactionError } = await supabase
       .from("transactions")
       .delete()
@@ -290,7 +417,8 @@ export async function syncPendingChanges(userId: string) {
       synced += 1;
       announceChange();
     } catch {
-      // Keep changes that could not be sent; the next online retry will try again.
+      // Preserve queue ordering when one operation depends on an earlier change.
+      break;
     }
   }
 
@@ -301,8 +429,11 @@ export async function syncPendingChanges(userId: string) {
 
 export async function clearOfflineData(userId: string) {
   if (!userId) return;
-  const keys = ["transactions", "categories", "staff", "attendance:all", "work_logs", "work_days", "customers", "ledger:all"];
-  await Promise.all(keys.map((key) => del(cacheKey(userId, key))));
+  const prefix = `spendone:data:${userId}:`;
+  const userDataKeys = (await keys()).filter(
+    (key): key is string => typeof key === "string" && key.startsWith(prefix),
+  );
+  await Promise.all([...userDataKeys.map((key) => del(key)), del(queueKey(userId))]);
 }
 
 export const OFFLINE_CHANGE_EVENT = changeEvent;
