@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell, Stat } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { useTransactions } from "@/lib/data";
+import { useTransactions, currentUserId, type Txn } from "@/lib/data";
+import { deleteTransactionOffline } from "@/lib/offline";
 import { money, hiDate } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -52,13 +53,17 @@ function TransactionsPage() {
 
   const remove = async (id: string) => {
     if (!confirm("Delete this transaction?")) return;
-    const { error } = await supabase.from("transactions").delete().eq("id", id);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const userId = await currentUserId();
+      const result = await deleteTransactionOffline(userId, id);
+      qc.setQueryData<Txn[]>(["transactions"], (current = []) =>
+        current.filter((transaction) => transaction.id !== id),
+      );
+      if (!result.queued) qc.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success(result.queued ? "Deleted on this device; removal will sync when online." : "Deleted");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Something went wrong");
     }
-    qc.invalidateQueries({ queryKey: ["transactions"] });
-    toast.success("Deleted");
   };
 
   return (

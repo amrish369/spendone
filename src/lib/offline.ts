@@ -1,4 +1,4 @@
-import { del, get, set } from "idb-keyval";
+import { del, get, keys, set } from "idb-keyval";
 import { supabase } from "@/integrations/supabase/client";
 
 type OfflineTransaction = {
@@ -37,7 +37,12 @@ type OfflineAttendance = {
 type PendingChange = {
   id: string;
   userId: string;
-  kind: "transaction-insert" | "transaction-update" | "attendance-save" | "attendance-delete";
+  kind:
+    | "transaction-insert"
+    | "transaction-update"
+    | "transaction-delete"
+    | "attendance-save"
+    | "attendance-delete";
   payload: Record<string, unknown>;
 };
 
@@ -79,6 +84,9 @@ function applyQueuedChanges<T>(data: T, changes: PendingChange[], queryKey: stri
       const index = rows.findIndex((row) => row["id"] === transaction["id"]);
       if (index < 0) rows.unshift(transaction);
       else rows[index] = { ...rows[index], ...transaction };
+    }
+    if (queryKey === "transactions" && change.kind === "transaction-delete") {
+      rows = rows.filter((row) => row["id"] !== change.payload["transactionId"]);
     }
 
     if (queryKey.startsWith("attendance:") && change.kind === "attendance-save") {
@@ -293,6 +301,38 @@ export async function deleteAttendanceOffline(userId: string, attendanceId: stri
   return { queued: true };
 }
 
+export async function deleteTransactionOffline(userId: string, transactionId: string) {
+  const key = queueKey(userId);
+  const changes = (await get<PendingChange[]>(key)) ?? [];
+  const localCreate = changes.find(
+    (change) =>
+      change.kind === "transaction-insert" && change.payload["id"] === transactionId,
+  );
+  if (localCreate) {
+    await set(key, changes.filter((change) => change.id !== localCreate.id));
+    announceChange();
+    return { queued: false };
+  }
+
+  if (navigator.onLine) {
+    try {
+      const { error } = await supabase.from("transactions").delete().eq("id", transactionId);
+      if (error) throw error;
+      return { queued: false };
+    } catch (error) {
+      if (!isNetworkError(error)) throw error;
+    }
+  }
+
+  await enqueue({
+    id: `transaction-delete:${transactionId}`,
+    userId,
+    kind: "transaction-delete",
+    payload: { transactionId },
+  });
+  return { queued: true };
+}
+
 async function applyPendingChange(change: PendingChange) {
   if (change.kind === "transaction-insert") {
     const { error } = await supabase
@@ -305,6 +345,14 @@ async function applyPendingChange(change: PendingChange) {
     const { id, ...rawUpdates } = change.payload;
     const updates = rawUpdates as Partial<TransactionWrite>;
     const { error } = await supabase.from("transactions").update(updates).eq("id", String(id));
+    if (error) throw error;
+    return;
+  }
+  if (change.kind === "transaction-delete") {
+    const { error } = await supabase
+      .from("transactions")
+      .delete()
+      .eq("id", String(change.payload["transactionId"]));
     if (error) throw error;
     return;
   }
@@ -380,8 +428,11 @@ export async function syncPendingChanges(userId: string) {
 
 export async function clearOfflineData(userId: string) {
   if (!userId) return;
-  const keys = ["transactions", "categories", "staff", "attendance:all", "work_logs", "work_days", "customers", "ledger:all"];
-  await Promise.all([...keys.map((key) => del(cacheKey(userId, key))), del(queueKey(userId))]);
+  const prefix = `spendone:data:${userId}:`;
+  const userDataKeys = (await keys()).filter(
+    (key): key is string => typeof key === "string" && key.startsWith(prefix),
+  );
+  await Promise.all([...userDataKeys.map((key) => del(key)), del(queueKey(userId))]);
 }
 
 export const OFFLINE_CHANGE_EVENT = changeEvent;
