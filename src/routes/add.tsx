@@ -67,6 +67,7 @@ function AddPage() {
     setBusy(true);
     try {
       const user_id = await currentUserId();
+      const currentTransaction = edit ? txns.find((transaction) => transaction.id === edit) : undefined;
       const payload = {
         ...(edit ? { id: edit } : {}),
         user_id,
@@ -75,6 +76,8 @@ function AddPage() {
         amount: Number(amount),
         description: description || null,
         type,
+        source: currentTransaction?.source ?? "manual",
+        attendance_id: currentTransaction?.attendance_id ?? null,
       };
       const result = await saveTransactionOffline(payload, Boolean(edit));
       qc.setQueryData<Txn[]>(["transactions"], (current = []) => {

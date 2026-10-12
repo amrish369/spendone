@@ -131,6 +131,34 @@ export async function pendingCount(userId: string) {
 export async function saveTransactionOffline(transaction: OfflineTransaction, update = false) {
   const id = transaction.id ?? crypto.randomUUID();
   const row = { ...transaction, id, source: transaction.source ?? "manual" };
+  const userQueueKey = queueKey(transaction.user_id);
+  const currentQueue = (await get<PendingChange[]>(userQueueKey)) ?? [];
+  const queuedInsert = update
+    ? currentQueue.find(
+        (change) => change.kind === "transaction-insert" && change.payload["id"] === id,
+      )
+    : undefined;
+  if (queuedInsert) {
+    const mergedRow = { ...queuedInsert.payload, ...row };
+    if (navigator.onLine) {
+      try {
+        const { error } = await supabase
+          .from("transactions")
+          .upsert(mergedRow as unknown as TransactionWrite, { onConflict: "id" });
+        if (error) throw error;
+        await set(
+          userQueueKey,
+          currentQueue.filter((change) => change.id !== queuedInsert.id),
+        );
+        announceChange();
+        return { row: mergedRow, queued: false };
+      } catch (error) {
+        if (!isNetworkError(error)) throw error;
+      }
+    }
+    await enqueue({ ...queuedInsert, payload: mergedRow });
+    return { row: mergedRow, queued: true };
+  }
   const change: PendingChange = {
     id: update ? `transaction-update:${id}` : `transaction-insert:${id}`,
     userId: transaction.user_id,
