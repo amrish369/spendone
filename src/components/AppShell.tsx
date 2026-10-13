@@ -9,6 +9,29 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { OFFLINE_CHANGE_EVENT, pendingCount, syncPendingChanges } from "@/lib/offline";
+import {
+  useAttendance,
+  useCategories,
+  useCustomers,
+  useLedgerEntries,
+  useStaff,
+  useTransactions,
+  useWorkDays,
+  useWorkLogs,
+} from "@/lib/data";
+
+/** Loads all core data once signed in so every page has an on-device copy for offline use. */
+function OfflineWarmup() {
+  useTransactions();
+  useCategories();
+  useStaff();
+  useAttendance();
+  useWorkLogs();
+  useWorkDays();
+  useCustomers();
+  useLedgerEntries();
+  return null;
+}
 
 const NAV = [
   { to: "/", label: "🏠 Home" },
