@@ -1,4 +1,4 @@
 - [x] Add installable app metadata and guarded offline app-shell caching.
 - [x] Keep signed-in data cached locally and queue expenses/attendance changes by account.
 - [x] Show connection and pending-sync status; retry queued changes on reconnect.
-- [ ] Review preview build output and confirm the offline status UI renders.
+- [x] Review preview build output and confirm the app routes render without browser errors.
