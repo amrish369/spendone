@@ -170,6 +170,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
         <span aria-hidden="true" className={`size-2 rounded-full ${isOnline ? "bg-success" : "bg-warning"}`} />
         {isOnline ? (pending > 0 ? `Online · ${pending} change${pending === 1 ? "" : "s"} waiting to sync` : "Online · synced") : `Offline · ${pending > 0 ? `${pending} saved change${pending === 1 ? "" : "s"} waiting to sync` : "showing saved data"}`}
       </div>
+      <OfflineWarmup />
       <main className="mx-auto w-full max-w-3xl px-4 py-5">{children}</main>
       <nav
         aria-label="Bottom navigation"
